@@ -71,11 +71,11 @@ def test_pipeline_high_threat():
         }
     ]
 
-    ml_prediction, threat_level = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level = predict_threat_from_events(test_events)
 
     assert ml_prediction == "high"
     assert threat_level == "high"
-
+    assert 0.0 <= confidence <= 1.0
 
 def test_pipeline_medium_threat():
 
@@ -92,10 +92,11 @@ def test_pipeline_medium_threat():
         }
     ]
 
-    ml_prediction, threat_level = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level = predict_threat_from_events(test_events)
 
     assert ml_prediction == "medium"
     assert threat_level == "medium"
+    assert 0.0 <= confidence <= 1.0
 
 def test_load_events_from_json():
 

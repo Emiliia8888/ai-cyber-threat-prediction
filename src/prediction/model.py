@@ -35,3 +35,13 @@ def predict_threat(model, features):
 
     return model.predict([features])[0]
 
+def predict_threat_with_confidence(model, features):
+
+    prediction = model.predict([features])[0]
+    probabilities = model.predict_proba([features])[0]
+
+    class_index = list(model.classes_).index(prediction)
+    confidence = probabilities[class_index]
+
+    return prediction, confidence
+
