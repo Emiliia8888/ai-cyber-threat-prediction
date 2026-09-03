@@ -7,6 +7,7 @@ def count_failed_logins(events):
 
     return count
 
+
 def count_port_scans(events):
     count = 0
 
@@ -15,6 +16,7 @@ def count_port_scans(events):
             count += 1
 
     return count
+
 
 def count_successful_logins(events):
     count = 0
@@ -25,6 +27,7 @@ def count_successful_logins(events):
 
     return count
 
+
 def extract_features(events):
     return {
         "port_scan_count": count_port_scans(events),
@@ -32,9 +35,11 @@ def extract_features(events):
         "successful_login_count": count_successful_logins(events)
     }
 
+
 def features_to_vector(features):
     return [
         features["port_scan_count"],
         features["failed_login_count"],
         features["successful_login_count"]
     ]
+
