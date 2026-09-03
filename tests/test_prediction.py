@@ -119,3 +119,18 @@ def test_evaluation_dataset():
     assert labels.count("medium") == 1
     assert labels.count("high") == 2
 
+def test_cli_help():
+
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-m", "src.main", "--help"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "AI Cyber Threat Prediction System" in result.stdout
+    assert "events_file" in result.stdout
+

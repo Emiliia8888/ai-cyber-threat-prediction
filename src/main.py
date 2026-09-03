@@ -1,4 +1,4 @@
-import sys
+import argparse
 
 from src.preprocessing.event_loader import load_events
 from src.preprocessing.normalize import normalize_events, add_time_differences
@@ -22,16 +22,24 @@ def predict_threat_from_events(events):
 
 
 def main():
-    if len(sys.argv) > 1:
-        events_path = sys.argv[1]
-    else:
-        events_path = "data/events.json"
+    parser = argparse.ArgumentParser(
+        description="AI Cyber Threat Prediction System"
+    )
 
-    events = load_events(events_path)
+    parser.add_argument(
+        "events_file",
+        nargs="?",
+        default="data/events.json",
+        help="Path to JSON file containing security events",
+    )
+
+    args = parser.parse_args()
+
+    events = load_events(args.events_file)
 
     print("AI Cyber Threat Prediction System")
     print("Project started successfully!")
-    print(f"Input: {events_path}")
+    print(f"Input: {args.events_file}")
 
     ml_prediction, threat_level = predict_threat_from_events(events)
 
