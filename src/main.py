@@ -5,6 +5,7 @@ from src.preprocessing.normalize import normalize_events, add_time_differences
 from src.detection.rules import assess_threat_level
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import build_model, predict_threat
+from src.prediction.evaluate import evaluate_model
 
 
 def predict_threat_from_events(events):
@@ -33,7 +34,17 @@ def main():
         help="Path to JSON file containing security events",
     )
 
+    parser.add_argument(
+        "--evaluate",
+        action="store_true",
+        help="Evaluate the ML model using the evaluation dataset",
+    )
+
     args = parser.parse_args()
+
+    if args.evaluate:
+        evaluate_model("data/evaluation.json")
+        return
 
     events = load_events(args.events_file)
 
@@ -49,4 +60,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
