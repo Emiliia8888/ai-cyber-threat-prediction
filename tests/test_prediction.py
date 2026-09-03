@@ -47,3 +47,52 @@ def test_predict_normal_threat():
 
     assert prediction == "normal"
 
+from src.main import predict_threat_from_events
+
+
+def test_pipeline_high_threat():
+
+    test_events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00"
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00"
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:00"
+        }
+    ]
+
+    ml_prediction, threat_level = predict_threat_from_events(test_events)
+
+    assert ml_prediction == "high"
+    assert threat_level == "high"
+
+
+def test_pipeline_medium_threat():
+
+    test_events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00"
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00"
+        }
+    ]
+
+    ml_prediction, threat_level = predict_threat_from_events(test_events)
+
+    assert ml_prediction == "medium"
+    assert threat_level == "medium"
+
