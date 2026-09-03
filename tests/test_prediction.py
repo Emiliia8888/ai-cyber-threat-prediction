@@ -1,6 +1,7 @@
 from src.preprocessing.events import events
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import prepare_data, train_model, predict_threat
+from src.preprocessing.event_loader import load_events
 
 
 def test_predict_high_threat():
@@ -49,7 +50,6 @@ def test_predict_normal_threat():
 
 from src.main import predict_threat_from_events
 
-
 def test_pipeline_high_threat():
 
     test_events = [
@@ -95,4 +95,13 @@ def test_pipeline_medium_threat():
 
     assert ml_prediction == "medium"
     assert threat_level == "medium"
+
+def test_load_events_from_json():
+
+    events = load_events("data/events.json")
+
+    assert len(events) == 3
+    assert events[0]["type"] == "port_scan"
+    assert events[1]["type"] == "failed_login"
+    assert events[2]["type"] == "successful_login"
 

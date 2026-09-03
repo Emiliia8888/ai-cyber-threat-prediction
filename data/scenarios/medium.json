@@ -1,0 +1,12 @@
+[
+  {
+    "type": "port_scan",
+    "source": "server_01",
+    "timestamp": "2026-09-02 16:18:00"
+  },
+  {
+    "type": "failed_login",
+    "source": "server_01",
+    "timestamp": "2026-09-02 16:19:00"
+  }
+]

@@ -1,3 +1,6 @@
+import sys
+
+from src.preprocessing.event_loader import load_events
 from src.preprocessing.normalize import normalize_events, add_time_differences
 from src.detection.rules import assess_threat_level
 from src.prediction.features import extract_features, features_to_vector
@@ -20,10 +23,16 @@ def predict_threat_from_events(events):
 
 
 def main():
-    from src.preprocessing.events import events
+    if len(sys.argv) > 1:
+        events_path = sys.argv[1]
+    else:
+        events_path = "data/events.json"
+
+    events = load_events(events_path)
 
     print("AI Cyber Threat Prediction System")
     print("Project started successfully!")
+    print(f"Input: {events_path}")
 
     ml_prediction, threat_level = predict_threat_from_events(events)
 
