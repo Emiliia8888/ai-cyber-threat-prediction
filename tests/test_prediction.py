@@ -2,6 +2,7 @@ from src.preprocessing.events import events
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import prepare_data, train_model, predict_threat
 from src.preprocessing.event_loader import load_events
+from src.prediction.evaluate import load_evaluation_data
 
 
 def test_predict_high_threat():
@@ -104,4 +105,17 @@ def test_load_events_from_json():
     assert events[0]["type"] == "port_scan"
     assert events[1]["type"] == "failed_login"
     assert events[2]["type"] == "successful_login"
+
+def test_evaluation_dataset():
+
+    data = load_evaluation_data("data/evaluation.json")
+
+    assert len(data) == 6
+
+    labels = [item["label"] for item in data]
+
+    assert labels.count("normal") == 1
+    assert labels.count("low") == 2
+    assert labels.count("medium") == 1
+    assert labels.count("high") == 2
 
