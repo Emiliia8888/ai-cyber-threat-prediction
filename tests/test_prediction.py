@@ -110,13 +110,13 @@ def test_evaluation_dataset():
 
     data = load_evaluation_data("data/evaluation.json")
 
-    assert len(data) == 6
+    assert len(data) == 8
 
     labels = [item["label"] for item in data]
 
-    assert labels.count("normal") == 1
+    assert labels.count("normal") == 2
     assert labels.count("low") == 2
-    assert labels.count("medium") == 1
+    assert labels.count("medium") == 2
     assert labels.count("high") == 2
 
 def test_cli_help():
