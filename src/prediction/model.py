@@ -1,3 +1,5 @@
+from sklearn.tree import DecisionTreeClassifier
+
 from src.prediction.training_data import training_data
 
 
@@ -12,8 +14,6 @@ def prepare_data():
 
     return X, y
 
-from sklearn.tree import DecisionTreeClassifier
-
 
 def train_model(X, y):
 
@@ -23,6 +23,15 @@ def train_model(X, y):
 
     return model
 
+
+def build_model():
+
+    X, y = prepare_data()
+
+    return train_model(X, y)
+
+
 def predict_threat(model, features):
 
     return model.predict([features])[0]
+
