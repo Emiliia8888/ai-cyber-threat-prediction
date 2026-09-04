@@ -3,6 +3,7 @@ import argparse
 from src.preprocessing.event_loader import load_events
 from src.preprocessing.normalize import normalize_events, add_time_differences
 from src.detection.rules import assess_threat_level
+from src.detection.explanation import explain_risk
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
     build_model,
@@ -19,8 +20,10 @@ def predict_threat_from_events(events):
     model = build_model()
 
     features = features_to_vector(extract_features(events))
+
     ml_prediction, confidence = predict_threat_with_confidence(
-        model, features
+        model,
+        features,
     )
 
     threat_level = assess_threat_level(events)
@@ -66,6 +69,12 @@ def main():
     print(f"Confidence: {confidence:.2%}")
     print(f"Threat level: {threat_level}")
 
+    explanations = explain_risk(events)
+
+    print("Risk explanation:")
+    for explanation in explanations:
+        print(f"  - {explanation}")
+
     model = build_model()
     feature_importance = get_feature_importance(model)
 
@@ -76,3 +85,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
