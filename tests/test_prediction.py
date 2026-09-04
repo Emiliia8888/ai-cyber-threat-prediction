@@ -102,14 +102,14 @@ def test_evaluation_dataset():
 
     data = load_evaluation_data("data/evaluation.json")
 
-    assert len(data) == 8
+    assert len(data) == 12
 
     labels = [item["label"] for item in data]
 
-    assert labels.count("normal") == 2
-    assert labels.count("low") == 2
-    assert labels.count("medium") == 2
-    assert labels.count("high") == 2
+    assert labels.count("normal") == 3
+    assert labels.count("low") == 3
+    assert labels.count("medium") == 3
+    assert labels.count("high") == 3
 
 def test_cli_help():
 
@@ -154,3 +154,20 @@ def test_pipeline_returns_agreement():
 
     assert agreement is True
     assert ml_prediction == threat_level
+
+def test_feature_importance_contains_all_features():
+    from src.prediction.model import get_feature_importance
+
+    X, y = prepare_data()
+    model = train_model(X, y)
+
+    importance = get_feature_importance(model)
+
+    assert set(importance.keys()) == {
+        "port_scan_count",
+        "failed_login_count",
+        "successful_login_count",
+        "port_scan_followed_by_failed_login",
+    }
+
+    assert all(0.0 <= value <= 1.0 for value in importance.values())
