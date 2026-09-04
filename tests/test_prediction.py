@@ -171,3 +171,25 @@ def test_feature_importance_contains_all_features():
     }
 
     assert all(0.0 <= value <= 1.0 for value in importance.values())
+
+def test_pipeline_normal_threat():
+
+    test_events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:00:00"
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:01:00"
+        }
+    ]
+
+    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
+
+    assert ml_prediction == "normal"
+    assert threat_level == "normal"
+    assert agreement is True
+    assert 0.0 <= confidence <= 1.0
