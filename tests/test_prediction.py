@@ -104,3 +104,10 @@ def test_cli_help():
     assert "AI Cyber Threat Prediction System" in result.stdout
     assert "events_file" in result.stdout
 
+def test_predict_high_threat_with_unseen_feature_counts():
+    X, y = prepare_data()
+    model = train_model(X, y)
+
+    prediction = predict_threat(model, [5, 5, 5, 1])
+
+    assert prediction == "high"
