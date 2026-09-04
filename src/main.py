@@ -5,14 +5,13 @@ from src.preprocessing.normalize import normalize_events, add_time_differences
 from src.detection.rules import assess_threat_level
 from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
-
+from src.detection.assessment import compare_assessments
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
     build_model,
     predict_threat_with_confidence,
     get_feature_importance,
 )
-
 from src.prediction.evaluate import evaluate_model
 
 
@@ -33,7 +32,12 @@ def predict_threat_from_events(events):
 
     threat_level = assess_threat_level(events)
 
-    return ml_prediction, confidence, threat_level
+    agreement = compare_assessments(
+        ml_prediction,
+        threat_level,
+    )
+
+    return ml_prediction, confidence, threat_level, agreement
 
 
 def main():
@@ -66,23 +70,27 @@ def main():
     print("Project started successfully!")
     print(f"Input: {args.events_file}")
 
-    ml_prediction, confidence, threat_level = predict_threat_from_events(
-        events
-    )
+    (
+        ml_prediction,
+        confidence,
+        threat_level,
+        agreement,
+    ) = predict_threat_from_events(events)
 
     print(f"ML prediction: {ml_prediction}")
     print(f"Confidence: {confidence:.2%}")
     print(f"Threat level: {threat_level}")
+    print(
+        f"Assessment agreement: {'YES' if agreement else 'NO'}"
+    )
 
     print("Risk explanation:")
-
     explanations = explain_risk(events)
 
     for explanation in explanations:
         print(f"  - {explanation}")
 
     print("Risk severity:")
-
     severity = calculate_event_severity(events)
 
     for item in severity:
@@ -91,7 +99,6 @@ def main():
         )
 
     model = build_model()
-
     feature_importance = get_feature_importance(model)
 
     print("Feature importance:")
@@ -104,4 +111,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
