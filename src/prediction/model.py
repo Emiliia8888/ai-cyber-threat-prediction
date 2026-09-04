@@ -3,6 +3,13 @@ from sklearn.tree import DecisionTreeClassifier
 from src.prediction.training_data import training_data
 
 
+FEATURE_NAMES = [
+    "port_scan_count",
+    "failed_login_count",
+    "successful_login_count",
+]
+
+
 def prepare_data():
 
     X = []
@@ -35,6 +42,7 @@ def predict_threat(model, features):
 
     return model.predict([features])[0]
 
+
 def predict_threat_with_confidence(model, features):
 
     prediction = model.predict([features])[0]
@@ -44,4 +52,9 @@ def predict_threat_with_confidence(model, features):
     confidence = probabilities[class_index]
 
     return prediction, confidence
+
+
+def get_feature_importance(model):
+
+    return dict(zip(FEATURE_NAMES, model.feature_importances_))
 
