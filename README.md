@@ -11,6 +11,7 @@ The system processes cybersecurity events from JSON files, extracts numerical fe
 * Event preprocessing and normalization
 * Time-difference calculation between events
 * Numerical feature extraction
+* Sequence-based feature detection
 * Decision Tree classification
 * ML prediction confidence
 * Rule-based threat assessment
@@ -84,17 +85,25 @@ ai-cyber-threat-prediction/
 
 The system accepts cybersecurity events such as:
 
-* `port_scan`
-* `failed_login`
-* `successful_login`
+* `port_scan_count`
+
+* `failed_login_count`
+
+* `successful_login_count`
+
+* `port_scan_followed_by_failed_login`
 
 Events are loaded from JSON, normalized and processed.
 
 The system extracts numerical features including:
 
 * `port_scan_count`
+
 * `failed_login_count`
+
 * `successful_login_count`
+
+* `port_scan_followed_by_failed_login`
 
 These features are passed to a Decision Tree classifier.
 
@@ -255,7 +264,7 @@ python -m pytest
 Current test result:
 
 ```text
-28 passed
+37 passed
 ```
 
 The tests cover:
@@ -309,9 +318,13 @@ The Decision Tree model also provides feature importance information.
 For the current training data:
 
 ```text
-port_scan_count: 33.33%
+port_scan_count: 0.00%
+
 failed_login_count: 33.33%
+
 successful_login_count: 33.33%
+
+port_scan_followed_by_failed_login: 33.33%
 ```
 
 These values describe the relative importance assigned by the current trained model and should not be interpreted as universal indicators of cybersecurity risk.
@@ -333,22 +346,41 @@ The current workflow successfully passes the project's automated tests.
 The project currently provides a working cybersecurity threat detection and prediction MVP with:
 
 * cybersecurity event ingestion from JSON
+
 * preprocessing and normalization
+
 * time-difference calculation
+
 * feature extraction
+
+* sequence-based feature detection
+
 * Decision Tree classification
+
 * prediction confidence
+
 * rule-based threat assessment
+
 * ML/rule-based assessment comparison
+
 * risk explanation
+
 * event severity analysis
+
 * model evaluation
+
 * cross-validation
+
 * feature importance analysis
+
 * CLI support
+
 * predefined threat scenarios
+
 * automated tests
+
 * Git version control
+
 * GitHub Actions CI
 
 ## Limitations
