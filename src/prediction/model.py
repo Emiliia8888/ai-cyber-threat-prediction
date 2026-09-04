@@ -22,9 +22,14 @@ def prepare_data():
     return X, y
 
 
+def create_model():
+
+    return DecisionTreeClassifier(random_state=42)
+
+
 def train_model(X, y):
 
-    model = DecisionTreeClassifier(random_state=42)
+    model = create_model()
 
     model.fit(X, y)
 
