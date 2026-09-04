@@ -133,3 +133,24 @@ def test_predict_high_threat_with_unseen_feature_counts():
     prediction = predict_threat(model, [5, 5, 5, 1])
 
     assert prediction == "high"
+
+def test_pipeline_returns_agreement():
+    test_events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:00:00"
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:01:00"
+        }
+    ]
+
+    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(
+        test_events
+    )
+
+    assert agreement is True
+    assert ml_prediction == threat_level

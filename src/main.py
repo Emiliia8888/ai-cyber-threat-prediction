@@ -2,24 +2,28 @@ import argparse
 
 from src.preprocessing.event_loader import load_events
 from src.preprocessing.normalize import normalize_events, add_time_differences
+
 from src.detection.rules import assess_threat_level
 from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
 from src.detection.assessment import compare_assessments
+
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
     build_model,
     predict_threat_with_confidence,
     get_feature_importance,
 )
+
 from src.prediction.evaluate import evaluate_model
 
 
-def predict_threat_from_events(events):
+def predict_threat_from_events(events, model=None):
     normalize_events(events)
     add_time_differences(events)
 
-    model = build_model()
+    if model is None:
+        model = build_model()
 
     features = features_to_vector(
         extract_features(events)
@@ -70,39 +74,41 @@ def main():
     print("Project started successfully!")
     print(f"Input: {args.events_file}")
 
+    model = build_model()
+
     (
         ml_prediction,
         confidence,
         threat_level,
         agreement,
-    ) = predict_threat_from_events(events)
+    ) = predict_threat_from_events(
+        events,
+        model,
+    )
 
     print(f"ML prediction: {ml_prediction}")
     print(f"Confidence: {confidence:.2%}")
     print(f"Threat level: {threat_level}")
+
     print(
         f"Assessment agreement: {'YES' if agreement else 'NO'}"
     )
 
     print("Risk explanation:")
     explanations = explain_risk(events)
-
     for explanation in explanations:
         print(f"  - {explanation}")
 
     print("Risk severity:")
     severity = calculate_event_severity(events)
-
     for item in severity:
         print(
             f"  - {item['level']}: {item['message']}"
         )
 
-    model = build_model()
     feature_importance = get_feature_importance(model)
 
     print("Feature importance:")
-
     for feature, importance in feature_importance.items():
         print(
             f"  {feature}: {importance:.2%}"
