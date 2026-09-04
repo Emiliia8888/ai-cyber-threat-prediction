@@ -71,7 +71,7 @@ def test_pipeline_high_threat():
         }
     ]
 
-    ml_prediction, confidence, threat_level = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
 
     assert ml_prediction == "high"
     assert threat_level == "high"
@@ -92,7 +92,7 @@ def test_pipeline_medium_threat():
         }
     ]
 
-    ml_prediction, confidence, threat_level = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
 
     assert ml_prediction == "medium"
     assert threat_level == "medium"
