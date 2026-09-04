@@ -67,6 +67,28 @@ def test_pipeline_medium_threat():
     assert threat_level == "medium"
     assert 0.0 <= confidence <= 1.0
 
+def test_pipeline_failed_login_threat():
+
+    test_events = [
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:00:00"
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-04 10:01:00"
+        }
+    ]
+
+    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
+
+    assert ml_prediction == "low"
+    assert threat_level == "low"
+    assert agreement is True
+    assert 0.0 <= confidence <= 1.0
+
 def test_load_events_from_json():
 
     events = load_events("data/events.json")
