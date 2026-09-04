@@ -30,6 +30,7 @@ def detect_failed_login_followed_by_successful_login(events):
 
 
 def assess_threat_level(events):
+
     if (
         detect_port_scan_followed_by_failed_login(events)
         and detect_failed_login_followed_by_successful_login(events)
@@ -40,6 +41,16 @@ def assess_threat_level(events):
         return "medium"
 
     elif detect_failed_login_followed_by_successful_login(events):
+        return "low"
+
+    elif (
+        any(event["type"] == "failed_login" for event in events)
+        and not any(event["type"] == "port_scan" for event in events)
+        and not any(
+            event["type"] == "successful_login"
+            for event in events
+        )
+    ):
         return "low"
 
     return "normal"

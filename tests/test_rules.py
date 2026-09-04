@@ -49,6 +49,30 @@ def test_low_threat():
 
     assert assess_threat_level(test_events) == "low"
 
+
+def test_failed_login_threat():
+
+    test_events = [
+
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00"
+        },
+
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00"
+        }
+
+    ]
+
+    normalize_events(test_events)
+    add_time_differences(test_events)
+
+    assert assess_threat_level(test_events) == "low"
+
 def test_normal_threat():
     test_events = [
         {
