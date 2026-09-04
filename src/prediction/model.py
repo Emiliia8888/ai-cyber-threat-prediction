@@ -7,8 +7,8 @@ FEATURE_NAMES = [
     "port_scan_count",
     "failed_login_count",
     "successful_login_count",
+    "port_scan_followed_by_failed_login",
 ]
-
 
 def prepare_data():
 

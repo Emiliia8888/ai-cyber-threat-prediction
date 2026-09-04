@@ -4,10 +4,12 @@ from src.detection.rules import assess_threat_level
 
 
 def test_high_threat():
-    normalize_events(events)
-    add_time_differences(events)
+    test_events = [event.copy() for event in events]
 
-    assert assess_threat_level(events) == "high"
+    normalize_events(test_events)
+    add_time_differences(test_events)
+
+    assert assess_threat_level(test_events) == "high"
 
 def test_medium_threat():
     test_events = [
