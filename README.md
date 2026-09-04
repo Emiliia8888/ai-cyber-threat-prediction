@@ -17,6 +17,7 @@ A Python-based cybersecurity threat detection and prediction system that combine
 - CLI help with `--help`
 - Multiple predefined threat scenarios
 - Automated tests with pytest
+- Feature importance analysis
 
 ## Project Architecture
 
@@ -122,6 +123,13 @@ usage: python -m src.main [-h] [--evaluate] [events_file]
 Model Evaluation
 Evaluate the machine-learning model using the evaluation dataset:
 python -m src.main --evaluate
+Cross-validation was added to evaluate model stability.
+
+Current result:
+Scores: [1.00, 1.00, 0.75, 1.00]
+Mean accuracy: 0.94
+
+Because the dataset is small, cross-validation results should also be interpreted carefully.
 
 The evaluation reports:
 accuracy
