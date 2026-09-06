@@ -7,6 +7,8 @@ from src.detection.rules import assess_threat_level
 from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
 from src.detection.assessment import compare_assessments
+from src.detection.attack_type import detect_attack_type
+from src.detection.alerts import generate_alert
 
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
@@ -36,13 +38,14 @@ def predict_threat_from_events(events, model=None):
 
     threat_level = assess_threat_level(events)
 
+    attack_type = detect_attack_type(events)
+
     agreement = compare_assessments(
         ml_prediction,
         threat_level,
     )
 
-    return ml_prediction, confidence, threat_level, agreement
-
+    return ml_prediction, confidence, threat_level, agreement, attack_type
 
 def main():
     parser = argparse.ArgumentParser(
@@ -81,6 +84,7 @@ def main():
         confidence,
         threat_level,
         agreement,
+        attack_type,
     ) = predict_threat_from_events(
         events,
         model,
@@ -89,7 +93,15 @@ def main():
     print(f"ML prediction: {ml_prediction}")
     print(f"Confidence: {confidence:.2%}")
     print(f"Threat level: {threat_level}")
+    print(f"Attack type: {attack_type}")
 
+    alert = generate_alert(
+        attack_type,
+        threat_level,
+        confidence,
+    )
+
+    print(f"Alert: {alert}")
     print(
         f"Assessment agreement: {'YES' if agreement else 'NO'}"
     )

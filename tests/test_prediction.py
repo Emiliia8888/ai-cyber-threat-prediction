@@ -61,7 +61,7 @@ def test_pipeline_medium_threat():
         }
     ]
 
-    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level, agreement, attack_type = predict_threat_from_events(test_events)
 
     assert ml_prediction == "medium"
     assert threat_level == "medium"
@@ -82,7 +82,7 @@ def test_pipeline_failed_login_threat():
         }
     ]
 
-    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level, agreement, attack_type = predict_threat_from_events(test_events)
 
     assert ml_prediction == "low"
     assert threat_level == "low"
@@ -148,9 +148,7 @@ def test_pipeline_returns_agreement():
         }
     ]
 
-    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(
-        test_events
-    )
+    ml_prediction, confidence, threat_level, agreement, attack_type = predict_threat_from_events(test_events)
 
     assert agreement is True
     assert ml_prediction == threat_level
@@ -187,7 +185,7 @@ def test_pipeline_normal_threat():
         }
     ]
 
-    ml_prediction, confidence, threat_level, agreement = predict_threat_from_events(test_events)
+    ml_prediction, confidence, threat_level, agreement, attack_type = predict_threat_from_events(test_events)
 
     assert ml_prediction == "normal"
     assert threat_level == "normal"
