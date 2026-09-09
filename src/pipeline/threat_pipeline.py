@@ -61,13 +61,8 @@ class ThreatPipeline:
         Run the complete application pipeline from
         an input JSON file.
         """
-
-        # 1. Ingestion
         domain_events = self.event_source.load(file_path)
 
-        # 2. Convert domain events to the legacy event
-        #    representation required by the existing
-        #    preprocessing and risk layers.
         raw_events = [
             {
                 "type": event.event_type,
@@ -79,16 +74,13 @@ class ThreatPipeline:
             for event in domain_events
         ]
 
-        # 3. Preprocessing
         normalize_events(raw_events)
         add_time_differences(raw_events)
 
-        # 4. Feature extraction through the application port
         features = self.feature_engine.extract_from_domain_events(
             domain_events
         )
 
-        # 5. ML prediction
         model = build_model()
 
         prediction, confidence = predict_threat_with_confidence(
@@ -96,7 +88,6 @@ class ThreatPipeline:
             features_to_vector(features),
         )
 
-        # 6. Risk assessment
         risk = self.risk_engine.assess(
             raw_events,
             prediction,
@@ -111,6 +102,7 @@ class ThreatPipeline:
             explanation=risk["explanation"],
             severity=risk["severity"],
             features=features,
+            correlations=risk["correlations"],
         )
 
     def run_from_events(
@@ -125,15 +117,11 @@ class ThreatPipeline:
         preprocessing, feature extraction, ML prediction,
         and risk assessment behavior.
         """
-
-        # 1. Preprocessing
         normalize_events(events)
         add_time_differences(events)
 
-        # 2. Legacy feature extraction
         features = FeatureEngine().extract(events)
 
-        # 3. ML prediction
         model = build_model()
 
         prediction, confidence = predict_threat_with_confidence(
@@ -141,7 +129,6 @@ class ThreatPipeline:
             features_to_vector(features),
         )
 
-        # 4. Risk assessment through the application port
         risk = self.risk_engine.assess(
             events,
             prediction,
@@ -156,4 +143,5 @@ class ThreatPipeline:
             explanation=risk["explanation"],
             severity=risk["severity"],
             features=features,
+            correlations=risk["correlations"],
         )

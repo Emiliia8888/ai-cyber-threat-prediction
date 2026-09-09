@@ -20,6 +20,7 @@ class AnalysisResult:
     explanation: list[str]
     severity: list[dict[str, Any]]
     features: dict[str, Any]
+    correlations: list[dict[str, Any]] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -35,6 +36,7 @@ class AnalysisResult:
             "explanation": self.explanation,
             "severity": self.severity,
             "features": self.features,
+            "correlations": self.correlations,
         }
 
     def __getitem__(self, key: str) -> Any:
