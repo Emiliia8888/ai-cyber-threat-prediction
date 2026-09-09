@@ -1,13 +1,14 @@
+from src.application.correlation_result import CorrelationResult
 from src.attack_chain.attack_chain_engine import AttackChainEngine
 
 
 def test_build_chain_from_correlations():
 
     correlations = [
-        {
-            "sequence": "port_scan -> failed_login",
-            "source": "server_01",
-            "events": [
+        CorrelationResult(
+            sequence="port_scan -> failed_login",
+            source="server_01",
+            events=[
                 {
                     "type": "port_scan",
                     "source": "server_01",
@@ -19,12 +20,12 @@ def test_build_chain_from_correlations():
                     "timestamp": "2026-09-02 16:19:00",
                 },
             ],
-            "time_difference_seconds": 60,
-        },
-        {
-            "sequence": "failed_login -> successful_login",
-            "source": "server_01",
-            "events": [
+            time_difference_seconds=60,
+        ),
+        CorrelationResult(
+            sequence="failed_login -> successful_login",
+            source="server_01",
+            events=[
                 {
                     "type": "failed_login",
                     "source": "server_01",
@@ -36,8 +37,8 @@ def test_build_chain_from_correlations():
                     "timestamp": "2026-09-02 16:20:00",
                 },
             ],
-            "time_difference_seconds": 60,
-        },
+            time_difference_seconds=60,
+        ),
     ]
 
     engine = AttackChainEngine()

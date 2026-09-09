@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Any
 
+from src.application.correlation_result import CorrelationResult
+
 
 class AttackChainEngine:
     """
@@ -59,7 +61,6 @@ class AttackChainEngine:
 
         The complete chain must occur within max_chain_window.
         """
-
         if not events:
             return None
 
@@ -67,7 +68,6 @@ class AttackChainEngine:
 
         for event in events:
             event_type = event["type"]
-
             stage = self.STAGE_MAPPING.get(event_type)
 
             if stage is None:
@@ -137,21 +137,28 @@ class AttackChainEngine:
 
     def build_chain_from_correlations(
         self,
-        correlations: list[dict[str, Any]],
+        correlations: list[CorrelationResult | dict[str, Any]],
     ) -> dict[str, Any] | None:
         """
         Build an attack chain from structured correlation results.
 
-        Existing build_chain(events) remains unchanged for backward compatibility.
-        """
+        CorrelationResult is the preferred application-level format.
 
+        Legacy dictionaries are also supported for backward compatibility.
+        The existing build_chain(events) method remains unchanged.
+        """
         if not correlations:
             return None
 
         events: list[dict[str, Any]] = []
 
         for correlation in correlations:
-            for event in correlation["events"]:
+            if isinstance(correlation, CorrelationResult):
+                correlation_events = correlation.events
+            else:
+                correlation_events = correlation["events"]
+
+            for event in correlation_events:
                 if event not in events:
                     events.append(event)
 
@@ -172,7 +179,6 @@ class AttackChainEngine:
         Each unique attack stage contributes to the score.
         Repeated stages do not add additional points.
         """
-
         unique_stages = set(stages)
 
         return sum(
@@ -188,7 +194,6 @@ class AttackChainEngine:
         """
         Check whether the required stages occur in order.
         """
-
         required_index = 0
 
         for stage in stages:
@@ -201,11 +206,12 @@ class AttackChainEngine:
         return False
 
     @staticmethod
-    def _parse_timestamp(timestamp: datetime | str) -> datetime:
+    def _parse_timestamp(
+        timestamp: datetime | str,
+    ) -> datetime:
         """
         Convert a legacy timestamp string to datetime.
         """
-
         if isinstance(timestamp, datetime):
             return timestamp
 
