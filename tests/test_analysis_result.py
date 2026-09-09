@@ -31,3 +31,34 @@ def test_analysis_result_to_dict():
     assert data["attack_type"] == "multi_stage_attack"
     assert data["agreement"] is True
     assert data["features"]["failed_login_count"] == 2
+
+
+def test_analysis_result_serializes_typed_correlations():
+    from src.application.correlation_result import CorrelationResult
+
+    correlation = CorrelationResult(
+        sequence="port_scan -> failed_login",
+        source="server_01",
+        events=[],
+        time_difference_seconds=30,
+    )
+
+    result = AnalysisResult(
+        prediction="medium",
+        confidence=0.9,
+        threat_level="medium",
+        attack_type="port_scanning",
+        agreement=True,
+        explanation=[],
+        severity=[],
+        features={},
+        correlations=[correlation],
+    )
+
+    data = result.to_dict()
+
+    assert data["correlations"][0]["sequence"] == (
+        "port_scan -> failed_login"
+    )
+    assert data["correlations"][0]["source"] == "server_01"
+    assert data["correlations"][0]["time_difference_seconds"] == 30
