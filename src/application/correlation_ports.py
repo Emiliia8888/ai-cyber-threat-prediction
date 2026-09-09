@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from src.application.correlation_result import CorrelationResult
+
 
 class CorrelationEnginePort(ABC):
     """
@@ -11,5 +13,5 @@ class CorrelationEnginePort(ABC):
     def correlate(
         self,
         events: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
+    ) -> list[CorrelationResult]:
         raise NotImplementedError
