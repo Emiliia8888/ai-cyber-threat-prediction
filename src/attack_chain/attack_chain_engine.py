@@ -20,6 +20,14 @@ class AttackChainEngine:
         "lateral_movement": "lateral_movement",
     }
 
+    STAGE_SCORES = {
+        "reconnaissance": 10,
+        "credential_attack": 20,
+        "initial_access": 25,
+        "privilege_escalation": 20,
+        "lateral_movement": 25,
+    }
+
     def __init__(self, max_chain_window: int = 300) -> None:
         """
         Configure the maximum allowed duration of an attack chain.
@@ -117,12 +125,34 @@ class AttackChainEngine:
         ):
             chain_type = "advanced_multi_stage_attack"
 
+        chain_score = self._calculate_chain_score(stage_names)
+
         return {
             "chain_type": chain_type,
             "stages": stages,
             "stage_count": len(stages),
             "duration_seconds": duration_seconds,
+            "chain_score": chain_score,
         }
+
+    @classmethod
+    def _calculate_chain_score(
+        cls,
+        stages: list[str],
+    ) -> int:
+        """
+        Calculate the attack chain score.
+
+        Each unique attack stage contributes to the score.
+        Repeated stages do not add additional points.
+        """
+
+        unique_stages = set(stages)
+
+        return sum(
+            cls.STAGE_SCORES.get(stage, 0)
+            for stage in unique_stages
+        )
 
     @staticmethod
     def _contains_ordered_sequence(

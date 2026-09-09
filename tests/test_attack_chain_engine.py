@@ -267,3 +267,104 @@ def test_chain_too_long_returns_none():
     result = engine.build_chain(events)
 
     assert result is None
+
+def test_chain_score_for_basic_chain():
+    events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00",
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00",
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:00",
+        },
+    ]
+
+    engine = AttackChainEngine()
+
+    result = engine.build_chain(events)
+
+    assert result is not None
+    assert result["chain_score"] == 55
+
+
+def test_chain_score_for_advanced_chain():
+    events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00",
+        },
+        {
+            "type": "service_enumeration",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:30",
+        },
+        {
+            "type": "brute_force",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00",
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:00",
+        },
+        {
+            "type": "privilege_escalation",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:21:00",
+        },
+        {
+            "type": "lateral_movement",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:22:00",
+        },
+    ]
+
+    engine = AttackChainEngine()
+
+    result = engine.build_chain(events)
+
+    assert result is not None
+    assert result["chain_type"] == "advanced_multi_stage_attack"
+    assert result["chain_score"] == 100
+
+
+def test_repeated_stages_do_not_increase_chain_score():
+    events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00",
+        },
+        {
+            "type": "service_enumeration",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:30",
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00",
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:00",
+        },
+    ]
+
+    engine = AttackChainEngine()
+
+    result = engine.build_chain(events)
+
+    assert result is not None
+    assert result["chain_score"] == 55
