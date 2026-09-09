@@ -96,14 +96,14 @@ class ThreatPipeline:
         return AnalysisResult(
             prediction=prediction,
             confidence=confidence,
-            threat_level=risk["threat_level"],
-            attack_type=risk["attack_type"],
-            agreement=risk["agreement"],
-            explanation=risk["explanation"],
-            severity=risk["severity"],
+            threat_level=risk.threat_level,
+            attack_type=risk.attack_type,
+            agreement=risk.agreement,
+            explanation=risk.explanation,
+            severity=risk.severity,
             features=features,
-            correlations=risk["correlations"],
-            attack_chain=risk["attack_chain"],
+            correlations=risk.correlations,
+            attack_chain=risk.attack_chain,
         )
 
     def run_from_events(
@@ -138,12 +138,12 @@ class ThreatPipeline:
         return AnalysisResult(
             prediction=prediction,
             confidence=confidence,
-            threat_level=risk["threat_level"],
-            attack_type=risk["attack_type"],
-            agreement=risk["agreement"],
-            explanation=risk["explanation"],
-            severity=risk["severity"],
+            threat_level=risk.threat_level,
+            attack_type=risk.attack_type,
+            agreement=risk.agreement,
+            explanation=risk.explanation,
+            severity=risk.severity,
             features=features,
-            correlations=risk["correlations"],
-            attack_chain=risk["attack_chain"],
+            correlations=risk.correlations,
+            attack_chain=risk.attack_chain,
         )
