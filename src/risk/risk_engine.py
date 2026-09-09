@@ -1,7 +1,9 @@
 from typing import Any
 
-from src.attack_chain.attack_chain_engine import AttackChainEngine
-from src.correlation.correlation_engine import CorrelationEngine
+from src.application.attack_chain_ports import AttackChainEnginePort
+from src.application.correlation_ports import CorrelationEnginePort
+from src.attack_chain.legacy_attack_chain_engine import LegacyAttackChainEngine
+from src.correlation.legacy_correlation_engine import LegacyCorrelationEngine
 from src.detection.assessment import compare_assessments
 from src.detection.attack_type import detect_attack_type
 from src.detection.explanation import explain_risk
@@ -24,19 +26,19 @@ class RiskEngine:
 
     def __init__(
         self,
-        correlation_engine: CorrelationEngine | None = None,
-        attack_chain_engine: AttackChainEngine | None = None,
+        correlation_engine: CorrelationEnginePort | None = None,
+        attack_chain_engine: AttackChainEnginePort | None = None,
     ) -> None:
         self.correlation_engine = (
             correlation_engine
             if correlation_engine is not None
-            else CorrelationEngine()
+            else LegacyCorrelationEngine()
         )
 
         self.attack_chain_engine = (
             attack_chain_engine
             if attack_chain_engine is not None
-            else AttackChainEngine()
+            else LegacyAttackChainEngine()
         )
 
     def assess(
