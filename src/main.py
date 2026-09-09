@@ -8,7 +8,8 @@ from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
 from src.detection.assessment import compare_assessments
 from src.detection.attack_type import detect_attack_type
-from src.detection.alerts import generate_alert
+from src.application.alert_ports import AlertEnginePort
+from src.alerts.legacy_alert_engine import LegacyAlertEngine
 
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
@@ -109,7 +110,8 @@ def main():
     print(f"Threat level: {threat_level}")
     print(f"Attack type: {attack_type}")
 
-    alert = generate_alert(
+    alert_engine: AlertEnginePort = LegacyAlertEngine()
+    alert = alert_engine.generate(
         attack_type,
         threat_level,
         confidence,
