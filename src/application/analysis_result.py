@@ -21,6 +21,7 @@ class AnalysisResult:
     severity: list[dict[str, Any]]
     features: dict[str, Any]
     correlations: list[dict[str, Any]] | None = None
+    attack_chain: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -37,6 +38,7 @@ class AnalysisResult:
             "severity": self.severity,
             "features": self.features,
             "correlations": self.correlations,
+            "attack_chain": self.attack_chain,
         }
 
     def __getitem__(self, key: str) -> Any:

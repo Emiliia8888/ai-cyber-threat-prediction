@@ -103,6 +103,7 @@ class ThreatPipeline:
             severity=risk["severity"],
             features=features,
             correlations=risk["correlations"],
+            attack_chain=risk["attack_chain"],
         )
 
     def run_from_events(
@@ -144,4 +145,5 @@ class ThreatPipeline:
             severity=risk["severity"],
             features=features,
             correlations=risk["correlations"],
+            attack_chain=risk["attack_chain"],
         )

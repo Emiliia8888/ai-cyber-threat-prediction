@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.attack_chain.attack_chain_engine import AttackChainEngine
 from src.correlation.correlation_engine import CorrelationEngine
 from src.detection.assessment import compare_assessments
 from src.detection.attack_type import detect_attack_type
@@ -14,18 +15,28 @@ class RiskEngine:
 
     Existing detection logic remains unchanged.
 
-    Correlation analysis is added as an independent layer
-    for detecting temporal relationships between events.
+    Correlation analysis detects temporal relationships
+    between events.
+
+    Attack chain analysis builds higher-level multi-stage
+    attack sequences from the event stream.
     """
 
     def __init__(
         self,
         correlation_engine: CorrelationEngine | None = None,
+        attack_chain_engine: AttackChainEngine | None = None,
     ) -> None:
         self.correlation_engine = (
             correlation_engine
             if correlation_engine is not None
             else CorrelationEngine()
+        )
+
+        self.attack_chain_engine = (
+            attack_chain_engine
+            if attack_chain_engine is not None
+            else AttackChainEngine()
         )
 
     def assess(
@@ -49,6 +60,8 @@ class RiskEngine:
 
         correlations = self.correlation_engine.correlate(events)
 
+        attack_chain = self.attack_chain_engine.build_chain(events)
+
         return {
             "threat_level": threat_level,
             "attack_type": attack_type,
@@ -56,4 +69,5 @@ class RiskEngine:
             "explanation": explanation,
             "severity": severity,
             "correlations": correlations,
+            "attack_chain": attack_chain,
         }
