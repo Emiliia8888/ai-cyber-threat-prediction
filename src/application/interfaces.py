@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from src.application.risk_assessment import RiskAssessment
 from src.domain.event import Event
 
 
@@ -40,5 +41,5 @@ class RiskEnginePort(ABC):
         self,
         events: list[dict[str, Any]],
         ml_prediction: str,
-    ) -> dict[str, Any]:
+    ) -> RiskAssessment:
         raise NotImplementedError

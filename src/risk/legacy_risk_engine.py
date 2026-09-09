@@ -1,6 +1,7 @@
 from typing import Any
 
 from src.application.interfaces import RiskEnginePort
+from src.application.risk_assessment import RiskAssessment
 from src.risk.risk_engine import RiskEngine
 
 
@@ -17,7 +18,7 @@ class LegacyRiskEngine(RiskEnginePort):
         self,
         events: list[dict[str, Any]],
         ml_prediction: str,
-    ) -> dict[str, Any]:
+    ) -> RiskAssessment:
         return self._engine.assess(
             events,
             ml_prediction,
