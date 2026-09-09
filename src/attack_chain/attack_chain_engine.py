@@ -135,6 +135,32 @@ class AttackChainEngine:
             "chain_score": chain_score,
         }
 
+    def build_chain_from_correlations(
+        self,
+        correlations: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        """
+        Build an attack chain from structured correlation results.
+
+        Existing build_chain(events) remains unchanged for backward compatibility.
+        """
+
+        if not correlations:
+            return None
+
+        events: list[dict[str, Any]] = []
+
+        for correlation in correlations:
+            for event in correlation["events"]:
+                if event not in events:
+                    events.append(event)
+
+        events.sort(
+            key=lambda event: self._parse_timestamp(event["timestamp"])
+        )
+
+        return self.build_chain(events)
+
     @classmethod
     def _calculate_chain_score(
         cls,
