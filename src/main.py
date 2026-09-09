@@ -18,34 +18,48 @@ from src.prediction.model import (
 )
 
 from src.prediction.evaluate import evaluate_model
+from src.pipeline.threat_pipeline import ThreatPipeline
 
 
 def predict_threat_from_events(events, model=None):
-    normalize_events(events)
-    add_time_differences(events)
+    pipeline = ThreatPipeline()
 
-    if model is None:
-        model = build_model()
+    # Preserve the existing function contract.
+    # The pipeline operates on the same event dictionaries
+    # and reproduces the existing prediction/risk logic.
+    #
+    # The optional model argument is kept for backward compatibility.
+    if model is not None:
+        normalize_events(events)
+        add_time_differences(events)
 
-    features = features_to_vector(
-        extract_features(events)
-    )
+        features = features_to_vector(
+            extract_features(events)
+        )
 
-    ml_prediction, confidence = predict_threat_with_confidence(
-        model,
-        features,
-    )
+        ml_prediction, confidence = predict_threat_with_confidence(
+            model,
+            features,
+        )
 
-    threat_level = assess_threat_level(events)
+        risk = pipeline.risk_engine.assess(
+            events,
+            ml_prediction,
+        )
+    else:
+        result = pipeline.run_from_events(events)
 
-    attack_type = detect_attack_type(events)
+        ml_prediction = result["prediction"]
+        confidence = result["confidence"]
+        risk = result
 
-    agreement = compare_assessments(
+    return (
         ml_prediction,
-        threat_level,
+        confidence,
+        risk["threat_level"],
+        risk["agreement"],
+        risk["attack_type"],
     )
-
-    return ml_prediction, confidence, threat_level, agreement, attack_type
 
 def main():
     parser = argparse.ArgumentParser(
