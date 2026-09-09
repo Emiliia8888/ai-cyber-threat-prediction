@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Any
 
+from src.config.settings import DEFAULT_SETTINGS
+
 
 class CorrelationEngine:
     """
@@ -10,7 +12,10 @@ class CorrelationEngine:
     and legacy string timestamps.
     """
 
-    def __init__(self, window_seconds: int = 60) -> None:
+    def __init__(
+        self,
+        window_seconds: int = DEFAULT_SETTINGS.correlation_window_seconds,
+    ) -> None:
         self.window_seconds = window_seconds
 
     def correlate(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:

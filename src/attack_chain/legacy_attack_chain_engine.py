@@ -1,6 +1,7 @@
 from typing import Any
 
 from src.application.attack_chain_ports import AttackChainEnginePort
+from src.config.settings import DEFAULT_SETTINGS
 from src.application.correlation_result import CorrelationResult
 from src.attack_chain.attack_chain_engine import AttackChainEngine
 
@@ -12,7 +13,9 @@ class LegacyAttackChainEngine(AttackChainEnginePort):
     """
 
     def __init__(self) -> None:
-        self._engine = AttackChainEngine()
+        self._engine = AttackChainEngine(
+            max_chain_window=DEFAULT_SETTINGS.attack_chain_window_seconds,
+        )
 
     def build_chain(
         self,

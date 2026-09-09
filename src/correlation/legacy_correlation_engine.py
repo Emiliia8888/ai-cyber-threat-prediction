@@ -1,6 +1,7 @@
 from typing import Any
 
 from src.application.correlation_ports import CorrelationEnginePort
+from src.config.settings import DEFAULT_SETTINGS
 from src.application.correlation_result import CorrelationResult
 from src.correlation.correlation_engine import CorrelationEngine
 
@@ -12,7 +13,9 @@ class LegacyCorrelationEngine(CorrelationEnginePort):
     """
 
     def __init__(self) -> None:
-        self._engine = CorrelationEngine()
+        self._engine = CorrelationEngine(
+            window_seconds=DEFAULT_SETTINGS.correlation_window_seconds,
+        )
 
     def correlate(
         self,

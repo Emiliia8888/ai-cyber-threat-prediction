@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from src.application.correlation_result import CorrelationResult
+from src.config.settings import DEFAULT_SETTINGS
 
 
 class AttackChainEngine:
@@ -30,7 +31,10 @@ class AttackChainEngine:
         "lateral_movement": 25,
     }
 
-    def __init__(self, max_chain_window: int = 300) -> None:
+    def __init__(
+        self,
+        max_chain_window: int = DEFAULT_SETTINGS.attack_chain_window_seconds,
+    ) -> None:
         """
         Configure the maximum allowed duration of an attack chain.
 
