@@ -20,8 +20,8 @@ class RiskEngine:
     Correlation analysis detects temporal relationships
     between events.
 
-    Attack chain analysis builds higher-level multi-stage
-    attack sequences from the event stream.
+    Attack chain analysis consumes correlation results
+    produced by the correlation engine.
     """
 
     def __init__(
@@ -46,7 +46,6 @@ class RiskEngine:
         events: list[dict[str, Any]],
         ml_prediction: str,
     ) -> dict[str, Any]:
-
         threat_level = assess_threat_level(events)
 
         attack_type = detect_attack_type(events)
@@ -62,7 +61,9 @@ class RiskEngine:
 
         correlations = self.correlation_engine.correlate(events)
 
-        attack_chain = self.attack_chain_engine.build_chain(events)
+        attack_chain = self.attack_chain_engine.build_chain_from_correlations(
+            correlations
+        )
 
         return {
             "threat_level": threat_level,

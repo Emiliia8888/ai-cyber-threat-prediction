@@ -2,6 +2,7 @@ from src.risk.risk_engine import RiskEngine
 
 
 def test_risk_engine_combines_existing_risk_logic():
+
     events = [
         {
             "type": "port_scan",
@@ -37,18 +38,23 @@ def test_risk_engine_combines_existing_risk_logic():
     assert result["threat_level"] == "high"
     assert result["attack_type"] == "multi_stage_attack"
     assert result["agreement"] is True
-
     assert len(result["explanation"]) > 0
     assert len(result["severity"]) > 0
 
 
 class FakeCorrelationEngine:
+
     def correlate(self, events):
         return [{"sequence": "fake_correlation"}]
 
 
 class FakeAttackChainEngine:
-    def build_chain(self, events):
+
+    def build_chain_from_correlations(self, correlations):
+        assert correlations == [
+            {"sequence": "fake_correlation"}
+        ]
+
         return {
             "chain_type": "fake_chain",
             "chain_score": 999,
