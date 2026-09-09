@@ -213,3 +213,57 @@ def test_empty_events_return_none():
     chain = AttackChainEngine().build_chain([])
 
     assert chain is None
+
+
+def test_chain_duration_is_calculated():
+    events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00",
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:19:00",
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:30",
+        },
+    ]
+
+    engine = AttackChainEngine()
+
+    result = engine.build_chain(events)
+
+    assert result is not None
+    assert result["chain_type"] == "multi_stage_attack"
+    assert result["duration_seconds"] == 150
+
+
+def test_chain_too_long_returns_none():
+    events = [
+        {
+            "type": "port_scan",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:18:00",
+        },
+        {
+            "type": "failed_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:20:00",
+        },
+        {
+            "type": "successful_login",
+            "source": "server_01",
+            "timestamp": "2026-09-02 16:24:00",
+        },
+    ]
+
+    engine = AttackChainEngine(max_chain_window=300)
+
+    result = engine.build_chain(events)
+
+    assert result is None

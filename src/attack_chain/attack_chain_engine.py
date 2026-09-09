@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 
@@ -6,17 +7,7 @@ class AttackChainEngine:
     Detects multi-stage attack chains from security events.
 
     The engine builds higher-level attack chains from
-    ordered security events.
-
-    Supported event types include:
-
-        port_scan
-        service_enumeration
-        failed_login
-        brute_force
-        successful_login
-        privilege_escalation
-        lateral_movement
+    ordered and temporally related security events.
     """
 
     STAGE_MAPPING = {
@@ -29,6 +20,14 @@ class AttackChainEngine:
         "lateral_movement": "lateral_movement",
     }
 
+    def __init__(self, max_chain_window: int = 300) -> None:
+        """
+        Configure the maximum allowed duration of an attack chain.
+
+        Default: 300 seconds (5 minutes).
+        """
+        self.max_chain_window = max_chain_window
+
     def build_chain(
         self,
         events: list[dict[str, Any]],
@@ -36,25 +35,21 @@ class AttackChainEngine:
         """
         Build a multi-stage attack chain from security events.
 
-        Supported chain:
+        The chain must contain:
 
             reconnaissance
                 ->
             credential_attack
                 ->
             initial_access
-                ->
+
+        Optional later stages:
+
             privilege_escalation
                 ->
             lateral_movement
 
-        The reconnaissance stage may be represented by
-        port_scan or service_enumeration.
-
-        The credential_attack stage may be represented by
-        failed_login or brute_force.
-
-        Returns None when the required sequence is not present.
+        The complete chain must occur within max_chain_window.
         """
 
         if not events:
@@ -96,6 +91,18 @@ class AttackChainEngine:
         ):
             return None
 
+        timestamps = [
+            self._parse_timestamp(stage["timestamp"])
+            for stage in stages
+        ]
+
+        duration_seconds = (
+            timestamps[-1] - timestamps[0]
+        ).total_seconds()
+
+        if duration_seconds > self.max_chain_window:
+            return None
+
         chain_type = "multi_stage_attack"
 
         if self._contains_ordered_sequence(
@@ -114,6 +121,7 @@ class AttackChainEngine:
             "chain_type": chain_type,
             "stages": stages,
             "stage_count": len(stages),
+            "duration_seconds": duration_seconds,
         }
 
     @staticmethod
@@ -135,3 +143,17 @@ class AttackChainEngine:
                     return True
 
         return False
+
+    @staticmethod
+    def _parse_timestamp(timestamp: datetime | str) -> datetime:
+        """
+        Convert a legacy timestamp string to datetime.
+        """
+
+        if isinstance(timestamp, datetime):
+            return timestamp
+
+        return datetime.strptime(
+            timestamp,
+            "%Y-%m-%d %H:%M:%S",
+        )
