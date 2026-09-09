@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.application.analysis_result import AnalysisResult
 from src.application.interfaces import (
     EventSourcePort,
     FeatureEnginePort,
@@ -55,7 +56,7 @@ class ThreatPipeline:
             else LegacyRiskEngine()
         )
 
-    def run(self, file_path: str) -> dict[str, Any]:
+    def run(self, file_path: str) -> AnalysisResult:
         """
         Run the complete application pipeline from
         an input JSON file.
@@ -101,23 +102,28 @@ class ThreatPipeline:
             prediction,
         )
 
-        return {
-            "prediction": prediction,
-            "confidence": confidence,
-            "features": features,
-            **risk,
-        }
+        return AnalysisResult(
+            prediction=prediction,
+            confidence=confidence,
+            threat_level=risk["threat_level"],
+            attack_type=risk["attack_type"],
+            agreement=risk["agreement"],
+            explanation=risk["explanation"],
+            severity=risk["severity"],
+            features=features,
+        )
 
     def run_from_events(
         self,
         events: list[dict[str, Any]],
-    ) -> dict[str, Any]:
+    ) -> AnalysisResult:
         """
         Backward-compatible execution path for already
         loaded legacy event dictionaries.
 
         This method intentionally preserves the existing
-        behavior used by the current CLI and tests.
+        preprocessing, feature extraction, ML prediction,
+        and risk assessment behavior.
         """
 
         # 1. Preprocessing
@@ -141,9 +147,13 @@ class ThreatPipeline:
             prediction,
         )
 
-        return {
-            "prediction": prediction,
-            "confidence": confidence,
-            "features": features,
-            **risk,
-        }
+        return AnalysisResult(
+            prediction=prediction,
+            confidence=confidence,
+            threat_level=risk["threat_level"],
+            attack_type=risk["attack_type"],
+            agreement=risk["agreement"],
+            explanation=risk["explanation"],
+            severity=risk["severity"],
+            features=features,
+        )
