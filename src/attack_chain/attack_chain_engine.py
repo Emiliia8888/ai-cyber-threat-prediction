@@ -3,16 +3,31 @@ from typing import Any
 
 class AttackChainEngine:
     """
-    Detects multi-stage attack chains from correlated events.
+    Detects multi-stage attack chains from security events.
 
-    The engine builds a higher-level attack chain from
-    already ordered security events.
+    The engine builds higher-level attack chains from
+    ordered security events.
 
-    Existing event types remain supported:
+    Supported event types include:
+
         port_scan
+        service_enumeration
         failed_login
+        brute_force
         successful_login
+        privilege_escalation
+        lateral_movement
     """
+
+    STAGE_MAPPING = {
+        "port_scan": "reconnaissance",
+        "service_enumeration": "reconnaissance",
+        "failed_login": "credential_attack",
+        "brute_force": "credential_attack",
+        "successful_login": "initial_access",
+        "privilege_escalation": "privilege_escalation",
+        "lateral_movement": "lateral_movement",
+    }
 
     def build_chain(
         self,
@@ -21,13 +36,23 @@ class AttackChainEngine:
         """
         Build a multi-stage attack chain from security events.
 
-        Currently supported chain:
+        Supported chain:
 
-            port_scan
+            reconnaissance
                 ->
-            failed_login
+            credential_attack
                 ->
-            successful_login
+            initial_access
+                ->
+            privilege_escalation
+                ->
+            lateral_movement
+
+        The reconnaissance stage may be represented by
+        port_scan or service_enumeration.
+
+        The credential_attack stage may be represented by
+        failed_login or brute_force.
 
         Returns None when the required sequence is not present.
         """
@@ -37,28 +62,24 @@ class AttackChainEngine:
 
         stages: list[dict[str, Any]] = []
 
-        stage_mapping = {
-            "port_scan": "reconnaissance",
-            "failed_login": "credential_attack",
-            "successful_login": "initial_access",
-        }
-
         for event in events:
             event_type = event["type"]
 
-            if event_type not in stage_mapping:
+            stage = self.STAGE_MAPPING.get(event_type)
+
+            if stage is None:
                 continue
 
             stages.append(
                 {
-                    "stage": stage_mapping[event_type],
+                    "stage": stage,
                     "event_type": event_type,
                     "source": event["source"],
                     "timestamp": event["timestamp"],
                 }
             )
 
-        if len(stages) < 2:
+        if len(stages) < 3:
             return None
 
         stage_names = [stage["stage"] for stage in stages]
@@ -75,8 +96,22 @@ class AttackChainEngine:
         ):
             return None
 
+        chain_type = "multi_stage_attack"
+
+        if self._contains_ordered_sequence(
+            stage_names,
+            [
+                "reconnaissance",
+                "credential_attack",
+                "initial_access",
+                "privilege_escalation",
+                "lateral_movement",
+            ],
+        ):
+            chain_type = "advanced_multi_stage_attack"
+
         return {
-            "chain_type": "multi_stage_attack",
+            "chain_type": chain_type,
             "stages": stages,
             "stage_count": len(stages),
         }
