@@ -2,6 +2,7 @@ from typing import Any
 
 from src.application.attack_chain_ports import AttackChainEnginePort
 from src.application.correlation_ports import CorrelationEnginePort
+from src.application.risk_assessment import RiskAssessment
 from src.attack_chain.legacy_attack_chain_engine import LegacyAttackChainEngine
 from src.correlation.legacy_correlation_engine import LegacyCorrelationEngine
 from src.detection.assessment import compare_assessments
@@ -22,6 +23,8 @@ class RiskEngine:
 
     Attack chain analysis consumes correlation results
     produced by the correlation engine.
+
+    The result is represented by the typed RiskAssessment model.
     """
 
     def __init__(
@@ -45,7 +48,7 @@ class RiskEngine:
         self,
         events: list[dict[str, Any]],
         ml_prediction: str,
-    ) -> dict[str, Any]:
+    ) -> RiskAssessment:
         threat_level = assess_threat_level(events)
 
         attack_type = detect_attack_type(events)
@@ -65,12 +68,12 @@ class RiskEngine:
             correlations
         )
 
-        return {
-            "threat_level": threat_level,
-            "attack_type": attack_type,
-            "agreement": agreement,
-            "explanation": explanation,
-            "severity": severity,
-            "correlations": correlations,
-            "attack_chain": attack_chain,
-        }
+        return RiskAssessment(
+            threat_level=threat_level,
+            attack_type=attack_type,
+            agreement=agreement,
+            explanation=explanation,
+            severity=severity,
+            correlations=correlations,
+            attack_chain=attack_chain,
+        )
