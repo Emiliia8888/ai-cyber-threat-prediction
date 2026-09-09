@@ -6,14 +6,12 @@ from src.application.interfaces import (
     FeatureEnginePort,
     RiskEnginePort,
 )
+
+from src.application.prediction_ports import PredictionEnginePort
 from src.features.feature_engine import FeatureEngine
 from src.features.legacy_feature_engine import LegacyFeatureEngine
 from src.ingestion.json_event_source import JsonEventSource
-from src.prediction.features import features_to_vector
-from src.prediction.model import (
-    build_model,
-    predict_threat_with_confidence,
-)
+from src.prediction.legacy_prediction_engine import LegacyPredictionEngine
 from src.preprocessing.normalize import (
     add_time_differences,
     normalize_events,
@@ -36,6 +34,7 @@ class ThreatPipeline:
         self,
         event_source: EventSourcePort | None = None,
         feature_engine: FeatureEnginePort | None = None,
+        prediction_engine: PredictionEnginePort | None = None,
         risk_engine: RiskEnginePort | None = None,
     ) -> None:
         self.event_source = (
@@ -50,6 +49,11 @@ class ThreatPipeline:
             else LegacyFeatureEngine()
         )
 
+        self.prediction_engine = (
+            prediction_engine
+            if prediction_engine is not None
+            else LegacyPredictionEngine()
+        )
         self.risk_engine = (
             risk_engine
             if risk_engine is not None
@@ -81,11 +85,8 @@ class ThreatPipeline:
             domain_events
         )
 
-        model = build_model()
-
-        prediction, confidence = predict_threat_with_confidence(
-            model,
-            features_to_vector(features),
+        prediction, confidence = self.prediction_engine.predict(
+            features
         )
 
         risk = self.risk_engine.assess(
@@ -123,11 +124,8 @@ class ThreatPipeline:
 
         features = FeatureEngine().extract(events)
 
-        model = build_model()
-
-        prediction, confidence = predict_threat_with_confidence(
-            model,
-            features_to_vector(features),
+        prediction, confidence = self.prediction_engine.predict(
+            features
         )
 
         risk = self.risk_engine.assess(
