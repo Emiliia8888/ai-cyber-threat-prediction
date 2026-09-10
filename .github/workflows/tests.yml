@@ -10,6 +10,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: cyber_threats
+          POSTGRES_USER: cyber_user
+          POSTGRES_PASSWORD: cyber_password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U cyber_user -d cyber_threats"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
