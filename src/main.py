@@ -1,63 +1,65 @@
 import argparse
 
 from src.application.alert_ports import AlertEnginePort
-from src.application.composition import (
-    create_alert_engine,
-    create_pipeline,
-)
-
-from src.detection.explanation import explain_risk
-from src.detection.severity import calculate_event_severity
-from src.preprocessing.event_loader import load_events
-from src.preprocessing.normalize import (
-    add_time_differences,
-    normalize_events,
-)
+from src.application.analysis_presenter import AnalysisPresenter
+from src.application.composition import create_alert_engine
+from src.application.threat_analysis import ThreatAnalysis
 from src.prediction.evaluate import evaluate_model
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
     build_model,
-    get_feature_importance,
     predict_threat_with_confidence,
+)
+from src.preprocessing.normalize import (
+    add_time_differences,
+    normalize_events,
 )
 
 
 def predict_threat_from_events(events, model=None):
-    pipeline = create_pipeline()
+    """
+    Preserve the legacy public function contract.
 
-    # Preserve the existing function contract.
-    #
-    # The optional model argument is kept for backward compatibility.
-    if model is not None:
-        normalize_events(events)
-        add_time_differences(events)
+    Existing callers may provide a trained model explicitly.
+    The application use case is used when no model is provided.
+    """
 
-        features = features_to_vector(
-            extract_features(events)
+    if model is None:
+        result = ThreatAnalysis().analyze_events(events)
+
+        return (
+            result.prediction,
+            result.confidence,
+            result.threat_level,
+            result.agreement,
+            result.attack_type,
         )
 
-        ml_prediction, confidence = predict_threat_with_confidence(
-            model,
-            features,
-        )
+    normalize_events(events)
+    add_time_differences(events)
 
-        risk = pipeline.risk_engine.assess(
-            events,
-            ml_prediction,
-        )
-    else:
-        result = pipeline.run_from_events(events)
+    features = features_to_vector(
+        extract_features(events)
+    )
 
-        ml_prediction = result["prediction"]
-        confidence = result["confidence"]
-        risk = result
+    ml_prediction, confidence = predict_threat_with_confidence(
+        model,
+        features,
+    )
+
+    analysis = ThreatAnalysis()
+
+    risk = analysis.pipeline.risk_engine.assess(
+        events,
+        ml_prediction,
+    )
 
     return (
         ml_prediction,
         confidence,
-        risk["threat_level"],
-        risk["agreement"],
-        risk["attack_type"],
+        risk.threat_level,
+        risk.agreement,
+        risk.attack_type,
     )
 
 
@@ -85,68 +87,25 @@ def main():
         evaluate_model("data/evaluation.json")
         return
 
-    events = load_events(args.events_file)
-
     print("AI Cyber Threat Prediction System")
     print("Project started successfully!")
     print(f"Input: {args.events_file}")
 
-    model = build_model()
+    analysis = ThreatAnalysis()
+    result = analysis.analyze_file(args.events_file)
 
-    (
-        ml_prediction,
-        confidence,
-        threat_level,
-        agreement,
-        attack_type,
-    ) = predict_threat_from_events(
-        events,
-        model,
-    )
-
-    print(f"ML prediction: {ml_prediction}")
-    print(f"Confidence: {confidence:.2%}")
-    print(f"Threat level: {threat_level}")
-    print(f"Attack type: {attack_type}")
+    presenter = AnalysisPresenter()
+    presenter.present(result)
 
     alert_engine: AlertEnginePort = create_alert_engine()
 
     alert = alert_engine.generate(
-        attack_type,
-        threat_level,
-        confidence,
+        result.attack_type,
+        result.threat_level,
+        result.confidence,
     )
 
     print(f"Alert: {alert}")
-
-    print(
-        f"Assessment agreement: {'YES' if agreement else 'NO'}"
-    )
-
-    print("Risk explanation:")
-
-    explanations = explain_risk(events)
-
-    for explanation in explanations:
-        print(f"  - {explanation}")
-
-    print("Risk severity:")
-
-    severity = calculate_event_severity(events)
-
-    for item in severity:
-        print(
-            f"  - {item['level']}: {item['message']}"
-        )
-
-    feature_importance = get_feature_importance(model)
-
-    print("Feature importance:")
-
-    for feature, importance in feature_importance.items():
-        print(
-            f"  {feature}: {importance:.2%}"
-        )
 
 
 if __name__ == "__main__":
