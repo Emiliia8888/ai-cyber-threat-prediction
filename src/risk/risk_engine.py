@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.application.attack_chain_ports import AttackChainEnginePort
 from src.application.correlation_ports import CorrelationEnginePort
 from src.application.risk_assessment import RiskAssessment
 from src.detection.assessment import compare_assessments
