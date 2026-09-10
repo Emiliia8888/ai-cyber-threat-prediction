@@ -39,5 +39,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Create database schema
+        run: |
+          PGPASSWORD=cyber_password psql \
+            -h localhost \
+            -p 5433 \
+            -U cyber_user \
+            -d cyber_threats \
+            -f src/infrastructure/persistence/sql/001_create_events.sql
+
       - name: Run tests
         run: python -m pytest
