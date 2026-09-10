@@ -2,7 +2,6 @@ from typing import Any
 
 from src.application.correlation_ports import CorrelationEnginePort
 from src.application.risk_assessment import RiskAssessment
-from src.attack_chain.legacy_attack_chain_engine import LegacyAttackChainEngine
 from src.detection.assessment import compare_assessments
 from src.detection.attack_type import detect_attack_type
 from src.detection.explanation import explain_risk

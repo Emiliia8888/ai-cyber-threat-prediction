@@ -1,3 +1,4 @@
+from src.application.alert_ports import AlertEnginePort
 from src.application.interfaces import (
     EventSourcePort,
     FeatureEnginePort,
@@ -7,6 +8,7 @@ from src.application.prediction_ports import PredictionEnginePort
 from src.attack_chain.legacy_attack_chain_engine import (
     LegacyAttackChainEngine,
 )
+from src.alerts.legacy_alert_engine import LegacyAlertEngine
 from src.correlation.legacy_correlation_engine import (
     LegacyCorrelationEngine,
 )
@@ -45,3 +47,14 @@ def create_pipeline(
             attack_chain_engine=attack_chain_engine,
         ),
     )
+
+
+def create_alert_engine() -> AlertEnginePort:
+    """
+    Create the default alert engine.
+
+    Concrete alert implementations are assembled here so that
+    application entrypoints depend only on the AlertEnginePort.
+    """
+
+    return LegacyAlertEngine()

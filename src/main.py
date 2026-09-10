@@ -1,8 +1,11 @@
 import argparse
 
 from src.application.alert_ports import AlertEnginePort
-from src.application.composition import create_pipeline
-from src.alerts.legacy_alert_engine import LegacyAlertEngine
+from src.application.composition import (
+    create_alert_engine,
+    create_pipeline,
+)
+
 from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
 from src.preprocessing.event_loader import load_events
@@ -106,7 +109,7 @@ def main():
     print(f"Threat level: {threat_level}")
     print(f"Attack type: {attack_type}")
 
-    alert_engine: AlertEnginePort = LegacyAlertEngine()
+    alert_engine: AlertEnginePort = create_alert_engine()
 
     alert = alert_engine.generate(
         attack_type,
