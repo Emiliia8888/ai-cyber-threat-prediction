@@ -3,11 +3,10 @@ import argparse
 from src.application.alert_ports import AlertEnginePort
 from src.application.analysis_presenter import AnalysisPresenter
 from src.application.composition import create_alert_engine
+from src.application.model_evaluation import ModelEvaluation
 from src.application.threat_analysis import ThreatAnalysis
-from src.prediction.evaluate import evaluate_model
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
-    build_model,
     predict_threat_with_confidence,
 )
 from src.preprocessing.normalize import (
@@ -84,7 +83,8 @@ def main():
     args = parser.parse_args()
 
     if args.evaluate:
-        evaluate_model("data/evaluation.json")
+        evaluator = ModelEvaluation()
+        evaluator.evaluate("data/evaluation.json")
         return
 
     print("AI Cyber Threat Prediction System")
