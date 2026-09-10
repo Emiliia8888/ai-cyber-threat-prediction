@@ -1,16 +1,19 @@
-from fastapi import APIRouter
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException
 
 from src.api.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
     HealthResponse,
+    JobResponse,
 )
-from src.application.threat_analysis import ThreatAnalysis
-
+from src.application.composition import create_threat_analysis
+from src.application.job import Job, JobStatus
 
 router = APIRouter()
 
-analysis = ThreatAnalysis()
+analysis = create_threat_analysis()
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -29,4 +32,50 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
 
     return AnalyzeResponse(
         **result.to_dict()
+    )
+
+
+@router.post("/jobs", response_model=JobResponse)
+def create_job(request: AnalyzeRequest) -> JobResponse:
+    events = [
+        event.model_dump()
+        for event in request.events
+    ]
+
+    job = Job(
+        job_id=str(uuid4()),
+        events=events,
+        status=JobStatus.PENDING,
+    )
+
+    analysis.enqueue_analysis(job)
+
+    return JobResponse(
+        job_id=job.job_id,
+        status=job.status.value,
+    )
+
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+def get_job(job_id: str) -> JobResponse:
+    job = analysis.get_job(job_id)
+
+    if job is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    result = None
+
+    if job.result is not None:
+        result = AnalyzeResponse(
+            **job.result.to_dict()
+        )
+
+    return JobResponse(
+        job_id=job.job_id,
+        status=job.status.value,
+        result=result,
+        error=job.error,
     )

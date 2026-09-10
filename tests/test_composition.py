@@ -3,6 +3,7 @@ from src.application.composition import (
     create_event_repository,
     create_job_queue,
     create_pipeline,
+    create_threat_analysis,
 )
 from src.application.threat_analysis import ThreatAnalysis
 from src.infrastructure.persistence.in_memory_event_repository import (
@@ -46,3 +47,9 @@ def test_create_analysis_worker_returns_default_worker():
     worker = create_analysis_worker(analysis)
 
     assert isinstance(worker, InMemoryAnalysisWorker)
+
+def test_create_threat_analysis_returns_default_service():
+
+    analysis = create_threat_analysis()
+
+    assert isinstance(analysis, ThreatAnalysis)

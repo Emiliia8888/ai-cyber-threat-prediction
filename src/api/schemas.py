@@ -26,5 +26,12 @@ class AnalyzeResponse(BaseModel):
     attack_chain: dict[str, Any] | None = None
 
 
+class JobResponse(BaseModel):
+    job_id: str
+    status: str
+    result: AnalyzeResponse | None = None
+    error: str | None = None
+
+
 class HealthResponse(BaseModel):
     status: str
