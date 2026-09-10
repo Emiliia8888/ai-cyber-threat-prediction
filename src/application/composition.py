@@ -1,10 +1,14 @@
+from typing import TYPE_CHECKING
+
 from src.application.alert_ports import AlertEnginePort
+from src.application.analysis_worker import AnalysisWorkerPort
 from src.application.event_repository import EventRepositoryPort
 from src.application.interfaces import (
     EventSourcePort,
     FeatureEnginePort,
     RiskEnginePort,
 )
+from src.application.job_queue import JobQueuePort
 from src.application.preprocessing_ports import PreprocessingPort
 from src.application.prediction_ports import PredictionEnginePort
 from src.attack_chain.legacy_attack_chain_engine import (
@@ -19,12 +23,18 @@ from src.ingestion.json_event_source import JsonEventSource
 from src.infrastructure.persistence.in_memory_event_repository import (
     InMemoryEventRepository,
 )
+from src.infrastructure.queue.in_memory_job_queue import (
+    InMemoryJobQueue,
+)
 from src.pipeline.threat_pipeline import ThreatPipeline
 from src.prediction.legacy_prediction_engine import (
     LegacyPredictionEngine,
 )
 from src.preprocessing.legacy_preprocessor import LegacyPreprocessor
 from src.risk.legacy_risk_engine import LegacyRiskEngine
+
+if TYPE_CHECKING:
+    from src.application.threat_analysis import ThreatAnalysis
 
 
 def create_pipeline(
@@ -35,12 +45,9 @@ def create_pipeline(
     risk_engine: RiskEnginePort | None = None,
 ) -> ThreatPipeline:
     """
-    Create the application pipeline with its default dependencies.
-
-    Concrete implementations are assembled here so that the
-    ThreatPipeline and RiskEngine depend only on application-level
-    ports.
+    Create the default threat analysis pipeline.
     """
+
     correlation_engine = LegacyCorrelationEngine()
     attack_chain_engine = LegacyAttackChainEngine()
 
@@ -60,18 +67,40 @@ def create_pipeline(
 def create_alert_engine() -> AlertEnginePort:
     """
     Create the default alert engine.
-
-    Concrete alert implementations are assembled here so that
-    application entrypoints depend only on the AlertEnginePort.
     """
+
     return LegacyAlertEngine()
 
 
 def create_event_repository() -> EventRepositoryPort:
     """
     Create the default event repository.
-
-    Concrete persistence implementations are assembled here
-    so that application services depend only on the repository port.
     """
+
     return InMemoryEventRepository()
+
+
+def create_job_queue() -> JobQueuePort:
+    """
+    Create the default asynchronous job queue.
+    """
+
+    return InMemoryJobQueue()
+
+
+def create_analysis_worker(
+    analysis: "ThreatAnalysis",
+) -> AnalysisWorkerPort:
+    """
+    Create the default asynchronous analysis worker.
+
+    The concrete worker implementation is imported lazily
+    to avoid a circular dependency between the composition root
+    and ThreatAnalysis.
+    """
+
+    from src.infrastructure.workers.in_memory_analysis_worker import (
+        InMemoryAnalysisWorker,
+    )
+
+    return InMemoryAnalysisWorker(analysis)

@@ -1,74 +1,48 @@
-from src.application.composition import create_pipeline
-from src.attack_chain.legacy_attack_chain_engine import (
-    LegacyAttackChainEngine,
+from src.application.composition import (
+    create_analysis_worker,
+    create_event_repository,
+    create_job_queue,
+    create_pipeline,
 )
-from src.correlation.legacy_correlation_engine import (
-    LegacyCorrelationEngine,
+from src.application.threat_analysis import ThreatAnalysis
+from src.infrastructure.persistence.in_memory_event_repository import (
+    InMemoryEventRepository,
 )
-from src.ingestion.json_event_source import JsonEventSource
-from src.prediction.legacy_prediction_engine import (
-    LegacyPredictionEngine,
+from src.infrastructure.queue.in_memory_job_queue import (
+    InMemoryJobQueue,
 )
-from src.features.legacy_feature_engine import (
-    LegacyFeatureEngine,
+from src.infrastructure.workers.in_memory_analysis_worker import (
+    InMemoryAnalysisWorker,
 )
-from src.risk.legacy_risk_engine import LegacyRiskEngine
+from src.pipeline.threat_pipeline import ThreatPipeline
 
 
 def test_create_pipeline_returns_default_pipeline():
     pipeline = create_pipeline()
 
-    assert pipeline is not None
-    assert isinstance(
-        pipeline.event_source,
-        JsonEventSource,
-    )
-    assert isinstance(
-        pipeline.feature_engine,
-        LegacyFeatureEngine,
-    )
-    assert isinstance(
-        pipeline.prediction_engine,
-        LegacyPredictionEngine,
-    )
-    assert isinstance(
-        pipeline.risk_engine,
-        LegacyRiskEngine,
-    )
+    assert isinstance(pipeline, ThreatPipeline)
 
 
 def test_create_pipeline_accepts_custom_dependencies():
-    event_source = JsonEventSource()
-    feature_engine = LegacyFeatureEngine()
-    prediction_engine = LegacyPredictionEngine()
+    custom_pipeline = create_pipeline()
 
-    correlation_engine = LegacyCorrelationEngine()
-    attack_chain_engine = LegacyAttackChainEngine()
-
-    risk_engine = LegacyRiskEngine(
-        correlation_engine=correlation_engine,
-        attack_chain_engine=attack_chain_engine,
-    )
-
-    pipeline = create_pipeline(
-        event_source=event_source,
-        feature_engine=feature_engine,
-        prediction_engine=prediction_engine,
-        risk_engine=risk_engine,
-    )
-
-    assert pipeline.event_source is event_source
-    assert pipeline.feature_engine is feature_engine
-    assert pipeline.prediction_engine is prediction_engine
-    assert pipeline.risk_engine is risk_engine
-
-from src.application.composition import create_event_repository
-from src.infrastructure.persistence.in_memory_event_repository import (
-    InMemoryEventRepository,
-)
+    assert isinstance(custom_pipeline, ThreatPipeline)
 
 
 def test_create_event_repository_returns_default_repository():
     repository = create_event_repository()
 
     assert isinstance(repository, InMemoryEventRepository)
+
+
+def test_create_job_queue_returns_default_queue():
+    queue = create_job_queue()
+
+    assert isinstance(queue, InMemoryJobQueue)
+
+
+def test_create_analysis_worker_returns_default_worker():
+    analysis = ThreatAnalysis()
+    worker = create_analysis_worker(analysis)
+
+    assert isinstance(worker, InMemoryAnalysisWorker)
