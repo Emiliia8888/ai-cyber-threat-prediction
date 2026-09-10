@@ -17,9 +17,6 @@ router = APIRouter()
 settings = Settings()
 analysis = create_threat_analysis(settings)
 
-analysis = create_threat_analysis()
-
-
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
