@@ -10,8 +10,12 @@ from src.api.schemas import (
 )
 from src.application.composition import create_threat_analysis
 from src.application.job import Job, JobStatus
+from src.config.settings import Settings
 
 router = APIRouter()
+
+settings = Settings()
+analysis = create_threat_analysis(settings)
 
 analysis = create_threat_analysis()
 

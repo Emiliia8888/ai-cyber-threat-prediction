@@ -138,15 +138,18 @@ def create_analysis_worker(
 
     return InMemoryAnalysisWorker(analysis)
 
-def create_threat_analysis() -> "ThreatAnalysis":
+def create_threat_analysis(
+    settings: Settings = DEFAULT_SETTINGS,
+) -> "ThreatAnalysis":
     """
     Create the default threat analysis application service
     with shared application dependencies.
     """
+
     from src.application.threat_analysis import ThreatAnalysis
 
     return ThreatAnalysis(
         event_repository=create_event_repository(),
         job_queue=create_job_queue(),
-        job_repository=create_job_repository(),
+        job_repository=create_job_repository(settings),
     )
