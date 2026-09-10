@@ -4,6 +4,7 @@ from src.application.interfaces import (
     FeatureEnginePort,
     RiskEnginePort,
 )
+from src.application.preprocessing_ports import PreprocessingPort
 from src.application.prediction_ports import PredictionEnginePort
 from src.attack_chain.legacy_attack_chain_engine import (
     LegacyAttackChainEngine,
@@ -18,11 +19,13 @@ from src.pipeline.threat_pipeline import ThreatPipeline
 from src.prediction.legacy_prediction_engine import (
     LegacyPredictionEngine,
 )
+from src.preprocessing.legacy_preprocessor import LegacyPreprocessor
 from src.risk.legacy_risk_engine import LegacyRiskEngine
 
 
 def create_pipeline(
     event_source: EventSourcePort | None = None,
+    preprocessing: PreprocessingPort | None = None,
     feature_engine: FeatureEnginePort | None = None,
     prediction_engine: PredictionEnginePort | None = None,
     risk_engine: RiskEnginePort | None = None,
@@ -31,7 +34,8 @@ def create_pipeline(
     Create the application pipeline with its default dependencies.
 
     Concrete implementations are assembled here so that the
-    ThreatPipeline and RiskEngine depend only on application-level ports.
+    ThreatPipeline and RiskEngine depend only on application-level
+    ports.
     """
 
     correlation_engine = LegacyCorrelationEngine()
@@ -39,6 +43,7 @@ def create_pipeline(
 
     return ThreatPipeline(
         event_source=event_source or JsonEventSource(),
+        preprocessing=preprocessing or LegacyPreprocessor(),
         feature_engine=feature_engine or LegacyFeatureEngine(),
         prediction_engine=prediction_engine or LegacyPredictionEngine(),
         risk_engine=risk_engine
