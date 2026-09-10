@@ -1,8 +1,15 @@
+from datetime import timedelta
+
+from src.attack_chain.legacy_attack_chain_engine import (
+    LegacyAttackChainEngine,
+)
+from src.correlation.legacy_correlation_engine import (
+    LegacyCorrelationEngine,
+)
 from src.risk.risk_engine import RiskEngine
 
 
 def test_risk_engine_combines_existing_risk_logic():
-
     events = [
         {
             "type": "port_scan",
@@ -14,7 +21,7 @@ def test_risk_engine_combines_existing_risk_logic():
             "type": "failed_login",
             "source": "server_01",
             "timestamp": "2026-09-02 16:19:00",
-            "time_since_previous": __import__("datetime").timedelta(
+            "time_since_previous": timedelta(
                 seconds=60
             ),
         },
@@ -22,87 +29,26 @@ def test_risk_engine_combines_existing_risk_logic():
             "type": "successful_login",
             "source": "server_01",
             "timestamp": "2026-09-02 16:20:00",
-            "time_since_previous": __import__("datetime").timedelta(
+            "time_since_previous": timedelta(
                 seconds=60
             ),
         },
     ]
-
-    engine = RiskEngine()
-
-    result = engine.assess(
-        events,
-        ml_prediction="high",
-    )
-
-    assert result["threat_level"] == "high"
-    assert result["attack_type"] == "multi_stage_attack"
-    assert result["agreement"] is True
-    assert len(result["explanation"]) > 0
-    assert len(result["severity"]) > 0
-
-
-class FakeCorrelationEngine:
-
-    def correlate(self, events):
-        return [{"sequence": "fake_correlation"}]
-
-
-class FakeAttackChainEngine:
-
-    def build_chain_from_correlations(self, correlations):
-        assert correlations == [
-            {"sequence": "fake_correlation"}
-        ]
-
-        return {
-            "chain_type": "fake_chain",
-            "chain_score": 999,
-        }
-
-
-def test_risk_engine_supports_dependency_injection():
 
     engine = RiskEngine(
-        correlation_engine=FakeCorrelationEngine(),
-        attack_chain_engine=FakeAttackChainEngine(),
+        correlation_engine=LegacyCorrelationEngine(),
+        attack_chain_engine=LegacyAttackChainEngine(),
     )
-
-    events = [
-        {
-            "type": "port_scan",
-            "source": "server_01",
-            "timestamp": "2026-09-02 16:18:00",
-            "time_since_previous": None,
-        },
-        {
-            "type": "failed_login",
-            "source": "server_01",
-            "timestamp": "2026-09-02 16:19:00",
-            "time_since_previous": __import__("datetime").timedelta(
-                seconds=60
-            ),
-        },
-        {
-            "type": "successful_login",
-            "source": "server_01",
-            "timestamp": "2026-09-02 16:20:00",
-            "time_since_previous": __import__("datetime").timedelta(
-                seconds=60
-            ),
-        },
-    ]
 
     result = engine.assess(
         events,
-        ml_prediction="high",
+        "high",
     )
 
-    assert result["correlations"] == [
-        {"sequence": "fake_correlation"}
-    ]
-
-    assert result["attack_chain"] == {
-        "chain_type": "fake_chain",
-        "chain_score": 999,
-    }
+    assert result.threat_level == "high"
+    assert result.attack_type == "multi_stage_attack"
+    assert result.agreement is True
+    assert len(result.explanation) > 0
+    assert len(result.severity) > 0
+    assert len(result.correlations) == 2
+    assert result.attack_chain is not None

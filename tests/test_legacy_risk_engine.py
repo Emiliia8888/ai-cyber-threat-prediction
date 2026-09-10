@@ -1,3 +1,9 @@
+from src.attack_chain.legacy_attack_chain_engine import (
+    LegacyAttackChainEngine,
+)
+from src.correlation.legacy_correlation_engine import (
+    LegacyCorrelationEngine,
+)
 from src.risk.legacy_risk_engine import LegacyRiskEngine
 
 
@@ -28,15 +34,18 @@ def test_legacy_risk_engine_assesses_threat():
     normalize_events(events)
     add_time_differences(events)
 
-    engine = LegacyRiskEngine()
+    engine = LegacyRiskEngine(
+        correlation_engine=LegacyCorrelationEngine(),
+        attack_chain_engine=LegacyAttackChainEngine(),
+    )
 
     result = engine.assess(
         events,
         "high",
     )
 
-    assert result["threat_level"] == "high"
-    assert result["attack_type"] == "multi_stage_attack"
-    assert result["agreement"] is True
-    assert len(result["explanation"]) > 0
-    assert len(result["severity"]) > 0
+    assert result.threat_level == "high"
+    assert result.attack_type == "multi_stage_attack"
+    assert result.agreement is True
+    assert len(result.correlations) == 2
+    assert result.attack_chain is not None

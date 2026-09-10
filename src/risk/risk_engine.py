@@ -1,10 +1,8 @@
 from typing import Any
 
-from src.application.attack_chain_ports import AttackChainEnginePort
 from src.application.correlation_ports import CorrelationEnginePort
 from src.application.risk_assessment import RiskAssessment
 from src.attack_chain.legacy_attack_chain_engine import LegacyAttackChainEngine
-from src.correlation.legacy_correlation_engine import LegacyCorrelationEngine
 from src.detection.assessment import compare_assessments
 from src.detection.attack_type import detect_attack_type
 from src.detection.explanation import explain_risk
@@ -15,34 +13,21 @@ from src.detection.severity import calculate_event_severity
 class RiskEngine:
     """
     Application-level risk assessment interface.
-
     Existing detection logic remains unchanged.
-
     Correlation analysis detects temporal relationships
     between events.
-
     Attack chain analysis consumes correlation results
     produced by the correlation engine.
-
     The result is represented by the typed RiskAssessment model.
     """
 
     def __init__(
         self,
-        correlation_engine: CorrelationEnginePort | None = None,
-        attack_chain_engine: AttackChainEnginePort | None = None,
+        correlation_engine: CorrelationEnginePort,
+        attack_chain_engine: AttackChainEnginePort,
     ) -> None:
-        self.correlation_engine = (
-            correlation_engine
-            if correlation_engine is not None
-            else LegacyCorrelationEngine()
-        )
-
-        self.attack_chain_engine = (
-            attack_chain_engine
-            if attack_chain_engine is not None
-            else LegacyAttackChainEngine()
-        )
+        self.correlation_engine = correlation_engine
+        self.attack_chain_engine = attack_chain_engine
 
     def assess(
         self,
