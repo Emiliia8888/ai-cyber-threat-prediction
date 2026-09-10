@@ -61,3 +61,14 @@ def test_create_pipeline_accepts_custom_dependencies():
     assert pipeline.feature_engine is feature_engine
     assert pipeline.prediction_engine is prediction_engine
     assert pipeline.risk_engine is risk_engine
+
+from src.application.composition import create_event_repository
+from src.infrastructure.persistence.in_memory_event_repository import (
+    InMemoryEventRepository,
+)
+
+
+def test_create_event_repository_returns_default_repository():
+    repository = create_event_repository()
+
+    assert isinstance(repository, InMemoryEventRepository)

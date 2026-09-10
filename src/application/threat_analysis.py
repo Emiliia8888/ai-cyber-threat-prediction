@@ -1,7 +1,11 @@
 from typing import Any
 
 from src.application.analysis_result import AnalysisResult
-from src.application.composition import create_pipeline
+from src.application.composition import (
+    create_event_repository,
+    create_pipeline,
+)
+from src.application.event_repository import EventRepositoryPort
 from src.pipeline.threat_pipeline import ThreatPipeline
 
 
@@ -17,8 +21,12 @@ class ThreatAnalysis:
     def __init__(
         self,
         pipeline: ThreatPipeline | None = None,
+        event_repository: EventRepositoryPort | None = None,
     ) -> None:
         self.pipeline = pipeline or create_pipeline()
+        self.event_repository = (
+            event_repository or create_event_repository()
+        )
 
     def analyze_file(
         self,
@@ -34,9 +42,8 @@ class ThreatAnalysis:
         events: list[dict[str, Any]],
     ) -> AnalysisResult:
         """
-        Analyze already loaded legacy event dictionaries.
-
-        This method preserves compatibility with the existing
-        run_from_events application path.
+        Analyze already loaded event dictionaries.
         """
+        self.event_repository.save_events(events)
+
         return self.pipeline.run_from_events(events)

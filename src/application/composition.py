@@ -1,4 +1,5 @@
 from src.application.alert_ports import AlertEnginePort
+from src.application.event_repository import EventRepositoryPort
 from src.application.interfaces import (
     EventSourcePort,
     FeatureEnginePort,
@@ -15,6 +16,9 @@ from src.correlation.legacy_correlation_engine import (
 )
 from src.features.legacy_feature_engine import LegacyFeatureEngine
 from src.ingestion.json_event_source import JsonEventSource
+from src.infrastructure.persistence.in_memory_event_repository import (
+    InMemoryEventRepository,
+)
 from src.pipeline.threat_pipeline import ThreatPipeline
 from src.prediction.legacy_prediction_engine import (
     LegacyPredictionEngine,
@@ -37,7 +41,6 @@ def create_pipeline(
     ThreatPipeline and RiskEngine depend only on application-level
     ports.
     """
-
     correlation_engine = LegacyCorrelationEngine()
     attack_chain_engine = LegacyAttackChainEngine()
 
@@ -61,5 +64,14 @@ def create_alert_engine() -> AlertEnginePort:
     Concrete alert implementations are assembled here so that
     application entrypoints depend only on the AlertEnginePort.
     """
-
     return LegacyAlertEngine()
+
+
+def create_event_repository() -> EventRepositoryPort:
+    """
+    Create the default event repository.
+
+    Concrete persistence implementations are assembled here
+    so that application services depend only on the repository port.
+    """
+    return InMemoryEventRepository()

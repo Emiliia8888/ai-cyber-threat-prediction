@@ -64,3 +64,36 @@ def test_threat_analysis_analyzes_events():
     assert result["attack_type"] == "multi_stage_attack"
     assert result["attack_chain"] is not None
 
+from src.infrastructure.persistence.in_memory_event_repository import (
+    InMemoryEventRepository,
+)
+
+
+def test_threat_analysis_saves_events_to_repository():
+    repository = InMemoryEventRepository()
+
+    analysis = ThreatAnalysis(
+        event_repository=repository,
+    )
+
+    events = [
+        {
+            "type": "port_scan",
+            "source": "192.168.1.10",
+            "timestamp": "2026-09-10 12:00:00",
+        },
+        {
+            "type": "failed_login",
+            "source": "192.168.1.10",
+            "timestamp": "2026-09-10 12:00:30",
+        },
+        {
+            "type": "successful_login",
+            "source": "192.168.1.10",
+            "timestamp": "2026-09-10 12:00:45",
+        },
+    ]
+
+    analysis.analyze_events(events)
+
+    assert repository.get_events() == events
