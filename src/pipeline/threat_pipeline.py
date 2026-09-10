@@ -6,17 +6,11 @@ from src.application.interfaces import (
     FeatureEnginePort,
     RiskEnginePort,
 )
-
 from src.application.prediction_ports import PredictionEnginePort
-from src.features.feature_engine import FeatureEngine
-from src.features.legacy_feature_engine import LegacyFeatureEngine
-from src.ingestion.json_event_source import JsonEventSource
-from src.prediction.legacy_prediction_engine import LegacyPredictionEngine
 from src.preprocessing.normalize import (
     add_time_differences,
     normalize_events,
 )
-from src.risk.legacy_risk_engine import LegacyRiskEngine
 
 
 class ThreatPipeline:
@@ -25,40 +19,21 @@ class ThreatPipeline:
     preprocessing, feature extraction, ML prediction,
     and risk assessment.
 
-    The pipeline uses application-level ports for the
-    new architecture while preserving the existing
-    legacy execution path.
+    Dependencies are provided through application-level
+    ports and are created by the composition root.
     """
 
     def __init__(
         self,
-        event_source: EventSourcePort | None = None,
-        feature_engine: FeatureEnginePort | None = None,
-        prediction_engine: PredictionEnginePort | None = None,
-        risk_engine: RiskEnginePort | None = None,
+        event_source: EventSourcePort,
+        feature_engine: FeatureEnginePort,
+        prediction_engine: PredictionEnginePort,
+        risk_engine: RiskEnginePort,
     ) -> None:
-        self.event_source = (
-            event_source
-            if event_source is not None
-            else JsonEventSource()
-        )
-
-        self.feature_engine = (
-            feature_engine
-            if feature_engine is not None
-            else LegacyFeatureEngine()
-        )
-
-        self.prediction_engine = (
-            prediction_engine
-            if prediction_engine is not None
-            else LegacyPredictionEngine()
-        )
-        self.risk_engine = (
-            risk_engine
-            if risk_engine is not None
-            else LegacyRiskEngine()
-        )
+        self.event_source = event_source
+        self.feature_engine = feature_engine
+        self.prediction_engine = prediction_engine
+        self.risk_engine = risk_engine
 
     def run(self, file_path: str) -> AnalysisResult:
         """
@@ -114,15 +89,11 @@ class ThreatPipeline:
         """
         Backward-compatible execution path for already
         loaded legacy event dictionaries.
-
-        This method intentionally preserves the existing
-        preprocessing, feature extraction, ML prediction,
-        and risk assessment behavior.
         """
         normalize_events(events)
         add_time_differences(events)
 
-        features = FeatureEngine().extract(events)
+        features = self.feature_engine.extract(events)
 
         prediction, confidence = self.prediction_engine.predict(
             features

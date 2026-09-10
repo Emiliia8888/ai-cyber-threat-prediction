@@ -14,6 +14,12 @@ class LegacyFeatureEngine(FeatureEnginePort):
     def __init__(self) -> None:
         self._engine = FeatureEngine()
 
+    def extract(
+        self,
+        events: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return self._engine.extract(events)
+
     def extract_from_domain_events(
         self,
         events: list[Event],

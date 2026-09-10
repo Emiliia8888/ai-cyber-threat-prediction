@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
-from src.pipeline.threat_pipeline import ThreatPipeline
-
+from src.application.composition import create_pipeline
 
 def test_pipeline_returns_attack_chain():
     start = datetime(2026, 9, 2, 16, 18, 0)
@@ -28,7 +27,7 @@ def test_pipeline_returns_attack_chain():
         },
     ]
 
-    result = ThreatPipeline().run_from_events(events)
+    result = create_pipeline().run_from_events(events)
 
     assert result["prediction"] == "high"
     assert result["threat_level"] == "high"
@@ -63,6 +62,6 @@ def test_pipeline_returns_no_attack_chain_for_incomplete_sequence():
         },
     ]
 
-    result = ThreatPipeline().run_from_events(events)
+    result = create_pipeline().run_from_events(events)
 
     assert result["attack_chain"] is None

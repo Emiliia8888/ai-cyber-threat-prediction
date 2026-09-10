@@ -1,8 +1,7 @@
-from src.pipeline.threat_pipeline import ThreatPipeline
-
+from src.application.composition import create_pipeline
 
 def test_threat_pipeline_runs_end_to_end():
-    pipeline = ThreatPipeline()
+    pipeline = create_pipeline()
 
     result = pipeline.run("data/events.json")
 

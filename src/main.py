@@ -1,33 +1,28 @@
 import argparse
 
-from src.preprocessing.event_loader import load_events
-from src.preprocessing.normalize import normalize_events, add_time_differences
-
-from src.detection.rules import assess_threat_level
+from src.application.alert_ports import AlertEnginePort
+from src.application.composition import create_pipeline
+from src.alerts.legacy_alert_engine import LegacyAlertEngine
 from src.detection.explanation import explain_risk
 from src.detection.severity import calculate_event_severity
-from src.detection.assessment import compare_assessments
-from src.detection.attack_type import detect_attack_type
-from src.application.alert_ports import AlertEnginePort
-from src.alerts.legacy_alert_engine import LegacyAlertEngine
-
+from src.preprocessing.event_loader import load_events
+from src.preprocessing.normalize import (
+    add_time_differences,
+    normalize_events,
+)
+from src.prediction.evaluate import evaluate_model
 from src.prediction.features import extract_features, features_to_vector
 from src.prediction.model import (
     build_model,
-    predict_threat_with_confidence,
     get_feature_importance,
+    predict_threat_with_confidence,
 )
-
-from src.prediction.evaluate import evaluate_model
-from src.pipeline.threat_pipeline import ThreatPipeline
 
 
 def predict_threat_from_events(events, model=None):
-    pipeline = ThreatPipeline()
+    pipeline = create_pipeline()
 
     # Preserve the existing function contract.
-    # The pipeline operates on the same event dictionaries
-    # and reproduces the existing prediction/risk logic.
     #
     # The optional model argument is kept for backward compatibility.
     if model is not None:
@@ -61,6 +56,7 @@ def predict_threat_from_events(events, model=None):
         risk["agreement"],
         risk["attack_type"],
     )
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -111,6 +107,7 @@ def main():
     print(f"Attack type: {attack_type}")
 
     alert_engine: AlertEnginePort = LegacyAlertEngine()
+
     alert = alert_engine.generate(
         attack_type,
         threat_level,
@@ -118,17 +115,22 @@ def main():
     )
 
     print(f"Alert: {alert}")
+
     print(
         f"Assessment agreement: {'YES' if agreement else 'NO'}"
     )
 
     print("Risk explanation:")
+
     explanations = explain_risk(events)
+
     for explanation in explanations:
         print(f"  - {explanation}")
 
     print("Risk severity:")
+
     severity = calculate_event_severity(events)
+
     for item in severity:
         print(
             f"  - {item['level']}: {item['message']}"
@@ -137,6 +139,7 @@ def main():
     feature_importance = get_feature_importance(model)
 
     print("Feature importance:")
+
     for feature, importance in feature_importance.items():
         print(
             f"  {feature}: {importance:.2%}"
