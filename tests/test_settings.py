@@ -55,3 +55,67 @@ def test_settings_parse_false_environment_variable(monkeypatch):
     settings = Settings()
 
     assert settings.use_postgres_jobs is False
+
+def test_settings_reject_negative_correlation_window(monkeypatch):
+    monkeypatch.setenv("CORRELATION_WINDOW_SECONDS", "-1")
+
+    try:
+        Settings()
+    except ValueError as exc:
+        assert "correlation_window_seconds" in str(exc)
+    else:
+        raise AssertionError(
+            "Negative correlation window must be rejected"
+        )
+
+
+def test_settings_reject_zero_attack_chain_window(monkeypatch):
+    monkeypatch.setenv("ATTACK_CHAIN_WINDOW_SECONDS", "0")
+
+    try:
+        Settings()
+    except ValueError as exc:
+        assert "attack_chain_window_seconds" in str(exc)
+    else:
+        raise AssertionError(
+            "Zero attack chain window must be rejected"
+        )
+
+
+def test_settings_reject_negative_random_state(monkeypatch):
+    monkeypatch.setenv("ML_RANDOM_STATE", "-1")
+
+    try:
+        Settings()
+    except ValueError as exc:
+        assert "ml_random_state" in str(exc)
+    else:
+        raise AssertionError(
+            "Negative ML random state must be rejected"
+        )
+
+
+def test_settings_reject_invalid_boolean(monkeypatch):
+    monkeypatch.setenv("USE_POSTGRES_JOBS", "maybe")
+
+    try:
+        Settings()
+    except ValueError as exc:
+        assert "USE_POSTGRES_JOBS" in str(exc)
+    else:
+        raise AssertionError(
+            "Invalid boolean value must be rejected"
+        )
+
+
+def test_settings_reject_empty_database_url(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "   ")
+
+    try:
+        Settings()
+    except ValueError as exc:
+        assert "DATABASE_URL" in str(exc)
+    else:
+        raise AssertionError(
+            "Empty database URL must be rejected"
+        )
