@@ -3,11 +3,14 @@ from typing import Any
 from src.application.analysis_result import AnalysisResult
 from src.application.composition import (
     create_event_repository,
+    create_job_queue,
+    create_job_repository,
     create_pipeline,
 )
 from src.application.event_repository import EventRepositoryPort
+from src.application.job import Job, JobStatus
 from src.application.job_queue import JobQueuePort
-from src.application.composition import create_job_queue
+from src.application.job_repository import JobRepositoryPort
 from src.pipeline.threat_pipeline import ThreatPipeline
 
 
@@ -25,12 +28,16 @@ class ThreatAnalysis:
         pipeline: ThreatPipeline | None = None,
         event_repository: EventRepositoryPort | None = None,
         job_queue: JobQueuePort | None = None,
+        job_repository: JobRepositoryPort | None = None,
     ) -> None:
         self.pipeline = pipeline or create_pipeline()
         self.event_repository = (
             event_repository or create_event_repository()
         )
         self.job_queue = job_queue or create_job_queue()
+        self.job_repository = (
+            job_repository or create_job_repository()
+        )
 
     def analyze_file(
         self,
@@ -49,17 +56,27 @@ class ThreatAnalysis:
         Analyze already loaded event dictionaries.
         """
         self.event_repository.save_events(events)
-
         return self.pipeline.run_from_events(events)
 
     def enqueue_analysis(
         self,
-        job: dict[str, Any],
+        job: Job,
     ) -> None:
         """
-        Add an analysis job to the asynchronous job queue.
+        Add an analysis job to the asynchronous job queue
+        and persist its initial state.
         """
+        self.job_repository.save(job)
         self.job_queue.enqueue(job)
+
+    def get_job(
+        self,
+        job_id: str,
+    ) -> Job | None:
+        """
+        Retrieve a persisted analysis job.
+        """
+        return self.job_repository.get(job_id)
 
     def process_next_job(self) -> AnalysisResult | None:
         """
@@ -72,6 +89,21 @@ class ThreatAnalysis:
         if job is None:
             return None
 
-        events = job["events"]
+        job.status = JobStatus.PROCESSING
+        self.job_repository.save(job)
 
-        return self.analyze_events(events)
+        try:
+            result = self.analyze_events(job.events)
+
+            job.status = JobStatus.COMPLETED
+            job.result = result
+            job.error = None
+            self.job_repository.save(job)
+
+            return result
+
+        except Exception as exc:
+            job.status = JobStatus.FAILED
+            job.error = str(exc)
+            self.job_repository.save(job)
+            raise

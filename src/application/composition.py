@@ -23,8 +23,13 @@ from src.ingestion.json_event_source import JsonEventSource
 from src.infrastructure.persistence.in_memory_event_repository import (
     InMemoryEventRepository,
 )
+
 from src.infrastructure.queue.in_memory_job_queue import (
     InMemoryJobQueue,
+)
+
+from src.infrastructure.persistence.in_memory_job_repository import (
+    InMemoryJobRepository,
 )
 from src.pipeline.threat_pipeline import ThreatPipeline
 from src.prediction.legacy_prediction_engine import (
@@ -32,6 +37,7 @@ from src.prediction.legacy_prediction_engine import (
 )
 from src.preprocessing.legacy_preprocessor import LegacyPreprocessor
 from src.risk.legacy_risk_engine import LegacyRiskEngine
+from src.application.job_repository import JobRepositoryPort
 
 if TYPE_CHECKING:
     from src.application.threat_analysis import ThreatAnalysis
@@ -87,6 +93,12 @@ def create_job_queue() -> JobQueuePort:
 
     return InMemoryJobQueue()
 
+def create_job_repository() -> JobRepositoryPort:
+    """
+    Create the default job repository.
+    """
+
+    return InMemoryJobRepository()
 
 def create_analysis_worker(
     analysis: "ThreatAnalysis",
