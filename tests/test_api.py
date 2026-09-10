@@ -1,19 +1,23 @@
+import pytest
+
 from fastapi.testclient import TestClient
 
 from src.api.app import app
 
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
 
-
-def test_health():
+def test_health(client):
     response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_analyze():
+def test_analyze(client):
     payload = {
         "events": [
             {
@@ -50,7 +54,7 @@ def test_analyze():
     assert "features" in data
 
 
-def test_analyze_rejects_empty_events():
+def test_analyze_rejects_empty_events(client):
     response = client.post(
         "/analyze",
         json={"events": []},
@@ -58,7 +62,7 @@ def test_analyze_rejects_empty_events():
 
     assert response.status_code == 422
 
-def test_create_job():
+def test_create_job(client):
     payload = {
         "events": [
             {
@@ -91,7 +95,7 @@ def test_create_job():
     assert data["error"] is None
 
 
-def test_get_job():
+def test_get_job(client):
     payload = {
         "events": [
             {
@@ -120,7 +124,7 @@ def test_get_job():
     assert data["error"] is None
 
 
-def test_get_unknown_job():
+def test_get_unknown_job(client):
     response = client.get("/jobs/unknown-job-id")
 
     assert response.status_code == 404

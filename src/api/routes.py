@@ -1,21 +1,20 @@
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from src.api.dependencies import get_threat_analysis
 from src.api.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
     HealthResponse,
     JobResponse,
 )
-from src.application.composition import create_threat_analysis
 from src.application.job import Job, JobStatus
-from src.config.settings import Settings
+from src.application.threat_analysis import ThreatAnalysis
+
 
 router = APIRouter()
 
-settings = Settings()
-analysis = create_threat_analysis(settings)
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
@@ -23,7 +22,10 @@ def health() -> HealthResponse:
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
-def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
+def analyze(
+    request: AnalyzeRequest,
+    analysis: ThreatAnalysis = Depends(get_threat_analysis),
+) -> AnalyzeResponse:
     events = [
         event.model_dump()
         for event in request.events
@@ -37,7 +39,10 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
 
 
 @router.post("/jobs", response_model=JobResponse)
-def create_job(request: AnalyzeRequest) -> JobResponse:
+def create_job(
+    request: AnalyzeRequest,
+    analysis: ThreatAnalysis = Depends(get_threat_analysis),
+) -> JobResponse:
     events = [
         event.model_dump()
         for event in request.events
@@ -58,7 +63,10 @@ def create_job(request: AnalyzeRequest) -> JobResponse:
 
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)
-def get_job(job_id: str) -> JobResponse:
+def get_job(
+    job_id: str,
+    analysis: ThreatAnalysis = Depends(get_threat_analysis),
+) -> JobResponse:
     job = analysis.get_job(job_id)
 
     if job is None:
