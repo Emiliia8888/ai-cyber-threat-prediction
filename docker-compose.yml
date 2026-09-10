@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: cyber-threat-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: cyber_threats
+      POSTGRES_USER: cyber_user
+      POSTGRES_PASSWORD: cyber_password
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/infrastructure/persistence/sql:/docker-entrypoint-initdb.d
+
+volumes:
+  postgres_data:
