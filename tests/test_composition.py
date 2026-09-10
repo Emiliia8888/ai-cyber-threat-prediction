@@ -6,6 +6,13 @@ from src.application.composition import (
     create_threat_analysis,
 )
 from src.application.threat_analysis import ThreatAnalysis
+from src.config.settings import Settings
+from src.infrastructure.persistence.in_memory_job_repository import (
+    InMemoryJobRepository,
+)
+from src.infrastructure.persistence.postgres_job_repository import (
+    PostgresJobRepository,
+)
 from src.infrastructure.persistence.in_memory_event_repository import (
     InMemoryEventRepository,
 )
@@ -53,3 +60,48 @@ def test_create_threat_analysis_returns_default_service():
     analysis = create_threat_analysis()
 
     assert isinstance(analysis, ThreatAnalysis)
+
+def test_create_job_repository_uses_in_memory_by_default():
+    from src.application.composition import create_job_repository
+
+    repository = create_job_repository()
+
+    assert isinstance(repository, InMemoryJobRepository)
+
+
+def test_create_job_repository_uses_postgres_when_enabled():
+    from unittest.mock import MagicMock
+
+    from src.application.composition import create_job_repository
+
+    settings = Settings(use_postgres_jobs=True)
+    connection = MagicMock()
+
+    repository = create_job_repository(
+        settings=settings,
+        connection=connection,
+    )
+
+    assert isinstance(repository, PostgresJobRepository)
+    assert repository.connection is connection
+
+def test_create_job_repository_creates_postgres_connection_when_enabled():
+    from unittest.mock import MagicMock, patch
+
+    from src.application.composition import create_job_repository
+
+    settings = Settings(use_postgres_jobs=True)
+    connection = MagicMock()
+
+    with patch(
+        "src.application.composition.PostgresConnectionFactory"
+    ) as factory_class:
+        factory_class.return_value.create.return_value = connection
+
+        repository = create_job_repository(settings=settings)
+
+    factory_class.assert_called_once_with(settings)
+    factory_class.return_value.create.assert_called_once_with()
+
+    assert isinstance(repository, PostgresJobRepository)
+    assert repository.connection is connection

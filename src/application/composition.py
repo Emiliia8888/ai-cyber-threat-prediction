@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from src.application.alert_ports import AlertEnginePort
 from src.application.analysis_worker import AnalysisWorkerPort
@@ -31,11 +31,18 @@ from src.infrastructure.queue.in_memory_job_queue import (
 from src.infrastructure.persistence.in_memory_job_repository import (
     InMemoryJobRepository,
 )
+from src.config.settings import DEFAULT_SETTINGS, Settings
+from src.infrastructure.persistence.postgres_job_repository import (
+    PostgresJobRepository,
+)
 from src.pipeline.threat_pipeline import ThreatPipeline
 from src.prediction.legacy_prediction_engine import (
     LegacyPredictionEngine,
 )
 from src.preprocessing.legacy_preprocessor import LegacyPreprocessor
+from src.infrastructure.persistence.postgres_connection import (
+    PostgresConnectionFactory,
+)
 from src.risk.legacy_risk_engine import LegacyRiskEngine
 from src.application.job_repository import JobRepositoryPort
 
@@ -93,10 +100,24 @@ def create_job_queue() -> JobQueuePort:
 
     return InMemoryJobQueue()
 
-def create_job_repository() -> JobRepositoryPort:
+def create_job_repository(
+    settings: Settings = DEFAULT_SETTINGS,
+    connection: Any | None = None,
+) -> JobRepositoryPort:
     """
-    Create the default job repository.
+    Create the configured job repository.
+
+    In-memory storage is the default for local development and tests.
+    PostgreSQL can be enabled through application settings.
+
+    When PostgreSQL is enabled and no connection is provided,
+    the connection factory creates one from the configured database URL.
     """
+    if settings.use_postgres_jobs:
+        if connection is None:
+            connection = PostgresConnectionFactory(settings).create()
+
+        return PostgresJobRepository(connection)
 
     return InMemoryJobRepository()
 

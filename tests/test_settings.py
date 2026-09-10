@@ -7,7 +7,12 @@ def test_default_settings_preserve_current_values():
     assert DEFAULT_SETTINGS.ml_random_state == 42
     assert DEFAULT_SETTINGS.events_file == "data/events.json"
     assert DEFAULT_SETTINGS.evaluation_file == "data/evaluation.json"
-
+    assert DEFAULT_SETTINGS.use_postgres_jobs is False
+    assert (
+        DEFAULT_SETTINGS.database_url
+        == "postgresql://cyber_user:cyber_password"
+        "@localhost:5433/cyber_threats"
+    )
 
 def test_settings_are_immutable():
     settings = Settings()
