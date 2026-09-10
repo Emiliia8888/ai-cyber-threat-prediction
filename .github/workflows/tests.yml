@@ -48,5 +48,12 @@ jobs:
             -d cyber_threats \
             -f src/infrastructure/persistence/sql/001_create_events.sql
 
+          PGPASSWORD=cyber_password psql \
+            -h localhost \
+            -p 5433 \
+            -U cyber_user \
+            -d cyber_threats \
+            -f src/infrastructure/persistence/sql/002_create_jobs.sql
+
       - name: Run tests
         run: python -m pytest
