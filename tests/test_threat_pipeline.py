@@ -1,4 +1,4 @@
-from src.application.composition import create_pipeline
+from src.bootstrap.composition import create_pipeline
 
 def test_threat_pipeline_runs_end_to_end():
     pipeline = create_pipeline()

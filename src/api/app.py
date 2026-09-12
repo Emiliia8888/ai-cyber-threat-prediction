@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.api.routes import router
-from src.application.composition import create_threat_analysis
+from src.bootstrap.composition import create_threat_analysis
 from src.config.settings import Settings
 
 

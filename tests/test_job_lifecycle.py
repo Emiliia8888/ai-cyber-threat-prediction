@@ -1,21 +1,28 @@
 from src.application.job import Job, JobStatus
 from src.application.threat_analysis import ThreatAnalysis
+from src.bootstrap.composition import (
+    create_event_repository,
+    create_job_queue,
+    create_pipeline,
+)
 from src.infrastructure.persistence.in_memory_job_repository import (
     InMemoryJobRepository,
 )
-from src.infrastructure.queue.in_memory_job_queue import (
-    InMemoryJobQueue,
-)
 
 
-def test_job_is_persisted_when_enqueued():
-    queue = InMemoryJobQueue()
-    repository = InMemoryJobRepository()
-
-    analysis = ThreatAnalysis(
+def create_test_analysis(queue, repository):
+    return ThreatAnalysis(
+        pipeline=create_pipeline(),
+        event_repository=create_event_repository(),
         job_queue=queue,
         job_repository=repository,
     )
+
+
+def test_job_is_persisted_when_enqueued():
+    queue = create_job_queue()
+    repository = InMemoryJobRepository()
+    analysis = create_test_analysis(queue, repository)
 
     job = Job(
         job_id="job-1",
@@ -37,13 +44,9 @@ def test_job_is_persisted_when_enqueued():
 
 
 def test_job_is_completed_after_processing():
-    queue = InMemoryJobQueue()
+    queue = create_job_queue()
     repository = InMemoryJobRepository()
-
-    analysis = ThreatAnalysis(
-        job_queue=queue,
-        job_repository=repository,
-    )
+    analysis = create_test_analysis(queue, repository)
 
     job = Job(
         job_id="job-1",
@@ -62,9 +65,7 @@ def test_job_is_completed_after_processing():
     )
 
     analysis.enqueue_analysis(job)
-
     result = analysis.process_next_job()
-
     stored_job = repository.get("job-1")
 
     assert result is not None
@@ -75,24 +76,17 @@ def test_job_is_completed_after_processing():
 
 
 def test_empty_queue_returns_none():
-    queue = InMemoryJobQueue()
+    queue = create_job_queue()
     repository = InMemoryJobRepository()
-
-    analysis = ThreatAnalysis(
-        job_queue=queue,
-        job_repository=repository,
-    )
+    analysis = create_test_analysis(queue, repository)
 
     assert analysis.process_next_job() is None
 
-def test_job_is_failed_when_processing_raises_error():
-    queue = InMemoryJobQueue()
-    repository = InMemoryJobRepository()
 
-    analysis = ThreatAnalysis(
-        job_queue=queue,
-        job_repository=repository,
-    )
+def test_job_is_failed_when_processing_raises_error():
+    queue = create_job_queue()
+    repository = InMemoryJobRepository()
+    analysis = create_test_analysis(queue, repository)
 
     job = Job(
         job_id="job-failed",

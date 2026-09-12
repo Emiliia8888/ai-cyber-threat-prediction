@@ -1,12 +1,6 @@
 from typing import Any
 
 from src.application.analysis_result import AnalysisResult
-from src.application.composition import (
-    create_event_repository,
-    create_job_queue,
-    create_job_repository,
-    create_pipeline,
-)
 from src.application.event_repository import EventRepositoryPort
 from src.application.job import Job, JobStatus
 from src.application.job_queue import JobQueuePort
@@ -18,26 +12,22 @@ class ThreatAnalysis:
     """
     Application use case for complete cyber threat analysis.
 
-    This class coordinates the application pipeline and provides
-    a stable entry point for consumers such as the CLI, API,
-    background workers, or future application interfaces.
+    Dependencies are injected from the composition root.
+    The application layer does not construct infrastructure
+    or concrete implementations itself.
     """
 
     def __init__(
         self,
-        pipeline: ThreatPipeline | None = None,
-        event_repository: EventRepositoryPort | None = None,
-        job_queue: JobQueuePort | None = None,
-        job_repository: JobRepositoryPort | None = None,
+        pipeline: ThreatPipeline,
+        event_repository: EventRepositoryPort,
+        job_queue: JobQueuePort,
+        job_repository: JobRepositoryPort,
     ) -> None:
-        self.pipeline = pipeline or create_pipeline()
-        self.event_repository = (
-            event_repository or create_event_repository()
-        )
-        self.job_queue = job_queue or create_job_queue()
-        self.job_repository = (
-            job_repository or create_job_repository()
-        )
+        self.pipeline = pipeline
+        self.event_repository = event_repository
+        self.job_queue = job_queue
+        self.job_repository = job_repository
 
     def analyze_file(
         self,
@@ -81,7 +71,6 @@ class ThreatAnalysis:
     def process_next_job(self) -> AnalysisResult | None:
         """
         Process the next queued analysis job.
-
         Returns None when the queue is empty.
         """
         job = self.job_queue.dequeue()

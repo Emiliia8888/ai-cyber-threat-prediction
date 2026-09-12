@@ -1,13 +1,25 @@
 from src.application.job import Job
 from src.application.threat_analysis import ThreatAnalysis
-from src.infrastructure.queue.in_memory_job_queue import (
-    InMemoryJobQueue,
+from src.bootstrap.composition import (
+    create_event_repository,
+    create_job_queue,
+    create_job_repository,
+    create_pipeline,
 )
 
 
+def create_test_analysis(queue):
+    return ThreatAnalysis(
+        pipeline=create_pipeline(),
+        event_repository=create_event_repository(),
+        job_queue=queue,
+        job_repository=create_job_repository(),
+    )
+
+
 def test_enqueue_analysis_adds_job_to_queue():
-    queue = InMemoryJobQueue()
-    analysis = ThreatAnalysis(job_queue=queue)
+    queue = create_job_queue()
+    analysis = create_test_analysis(queue)
 
     job = Job(
         job_id="job-1",
@@ -29,8 +41,8 @@ def test_enqueue_analysis_adds_job_to_queue():
 
 
 def test_process_next_job_processes_queued_events():
-    queue = InMemoryJobQueue()
-    analysis = ThreatAnalysis(job_queue=queue)
+    queue = create_job_queue()
+    analysis = create_test_analysis(queue)
 
     job = Job(
         job_id="job-1",

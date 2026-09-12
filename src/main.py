@@ -2,13 +2,13 @@ import argparse
 
 from src.application.alert_ports import AlertEnginePort
 from src.application.analysis_presenter import AnalysisPresenter
-from src.application.composition import create_alert_engine
 from src.application.model_evaluation import ModelEvaluation
-from src.application.threat_analysis import ThreatAnalysis
-from src.prediction.features import extract_features, features_to_vector
-from src.prediction.model import (
-    predict_threat_with_confidence,
+from src.bootstrap.composition import (
+    create_alert_engine,
+    create_threat_analysis,
 )
+from src.prediction.features import extract_features, features_to_vector
+from src.prediction.model import predict_threat_with_confidence
 from src.preprocessing.normalize import (
     add_time_differences,
     normalize_events,
@@ -22,10 +22,10 @@ def predict_threat_from_events(events, model=None):
     Existing callers may provide a trained model explicitly.
     The application use case is used when no model is provided.
     """
+    analysis = create_threat_analysis()
 
     if model is None:
-        result = ThreatAnalysis().analyze_events(events)
-
+        result = analysis.analyze_events(events)
         return (
             result.prediction,
             result.confidence,
@@ -45,8 +45,6 @@ def predict_threat_from_events(events, model=None):
         model,
         features,
     )
-
-    analysis = ThreatAnalysis()
 
     risk = analysis.pipeline.risk_engine.assess(
         events,
@@ -91,7 +89,7 @@ def main():
     print("Project started successfully!")
     print(f"Input: {args.events_file}")
 
-    analysis = ThreatAnalysis()
+    analysis = create_threat_analysis()
     result = analysis.analyze_file(args.events_file)
 
     presenter = AnalysisPresenter()

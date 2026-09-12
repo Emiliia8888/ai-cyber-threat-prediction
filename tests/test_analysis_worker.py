@@ -1,16 +1,28 @@
-from src.application.job import Job
+from src.application.job import Job, JobStatus
 from src.application.threat_analysis import ThreatAnalysis
-from src.infrastructure.queue.in_memory_job_queue import (
-    InMemoryJobQueue,
+from src.bootstrap.composition import (
+    create_event_repository,
+    create_job_queue,
+    create_job_repository,
+    create_pipeline,
 )
 from src.infrastructure.workers.in_memory_analysis_worker import (
     InMemoryAnalysisWorker,
 )
 
 
+def create_test_analysis(queue):
+    return ThreatAnalysis(
+        pipeline=create_pipeline(),
+        event_repository=create_event_repository(),
+        job_queue=queue,
+        job_repository=create_job_repository(),
+    )
+
+
 def test_worker_processes_queued_job():
-    queue = InMemoryJobQueue()
-    analysis = ThreatAnalysis(job_queue=queue)
+    queue = create_job_queue()
+    analysis = create_test_analysis(queue)
     worker = InMemoryAnalysisWorker(analysis)
 
     job = Job(
@@ -36,16 +48,16 @@ def test_worker_processes_queued_job():
 
 
 def test_worker_returns_false_when_queue_is_empty():
-    queue = InMemoryJobQueue()
-    analysis = ThreatAnalysis(job_queue=queue)
+    queue = create_job_queue()
+    analysis = create_test_analysis(queue)
     worker = InMemoryAnalysisWorker(analysis)
 
     assert worker.process_next() is False
 
-from src.application.job import Job, JobStatus
+
 def test_worker_completes_job():
-    queue = InMemoryJobQueue()
-    analysis = ThreatAnalysis(job_queue=queue)
+    queue = create_job_queue()
+    analysis = create_test_analysis(queue)
     worker = InMemoryAnalysisWorker(analysis)
 
     job = Job(
@@ -67,9 +79,7 @@ def test_worker_completes_job():
     analysis.enqueue_analysis(job)
 
     assert job.status == JobStatus.PENDING
-
     assert worker.process_next() is True
-
     assert job.status == JobStatus.COMPLETED
     assert job.result is not None
     assert job.error is None

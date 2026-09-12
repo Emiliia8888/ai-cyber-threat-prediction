@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from src.application.composition import create_pipeline
+from src.bootstrap.composition import create_pipeline
 
 def test_pipeline_returns_attack_chain():
     start = datetime(2026, 9, 2, 16, 18, 0)
