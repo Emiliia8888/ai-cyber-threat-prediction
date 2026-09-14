@@ -2,7 +2,7 @@
 def generate_alert(attack_type, threat_level, confidence):
     if threat_level == "high":
         return (
-            "\U0001f6a8 CRITICAL SECURITY ALERT: "
+            "CRITICAL SECURITY ALERT: "
             f"{attack_type} detected "
             f"(confidence: {confidence:.0%})"
         )

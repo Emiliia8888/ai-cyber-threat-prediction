@@ -6,15 +6,12 @@ class ModelEvaluation:
     Application use case for evaluating the ML threat prediction model.
 
     The application layer exposes a stable entry point for model
-    evaluation while the existing prediction implementation remains
-    isolated behind this use case.
+    evaluation while the prediction implementation remains isolated
+    behind this use case.
     """
 
-    def evaluate(
-        self,
-        evaluation_file: str,
-    ) -> None:
+    def evaluate(self) -> None:
         """
-        Evaluate the prediction model using the provided dataset.
+        Evaluate the persisted ML prediction model.
         """
-        evaluate_model(evaluation_file)
+        evaluate_model()

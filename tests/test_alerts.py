@@ -44,7 +44,7 @@ def test_generate_alert_high():
     )
 
     assert result == (
-        "\U0001f6a8 CRITICAL SECURITY ALERT: "
+        "CRITICAL SECURITY ALERT: "
         "multi_stage_attack detected "
         "(confidence: 100%)"
     )

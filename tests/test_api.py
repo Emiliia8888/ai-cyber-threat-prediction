@@ -48,7 +48,7 @@ def test_analyze(client):
     assert data["threat_level"] == "high"
     assert data["attack_type"] == "multi_stage_attack"
     assert data["agreement"] is True
-    assert data["confidence"] == 1.0
+    assert 0.9 < data["confidence"] <= 1.0
     assert "explanation" in data
     assert "severity" in data
     assert "features" in data

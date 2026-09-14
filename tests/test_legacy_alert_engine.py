@@ -11,7 +11,7 @@ def test_legacy_alert_engine_generates_high_alert():
     )
 
     assert result == (
-        "\U0001f6a8 CRITICAL SECURITY ALERT: "
+        "CRITICAL SECURITY ALERT: "
         "multi_stage_attack detected "
         "(confidence: 100%)"
     )

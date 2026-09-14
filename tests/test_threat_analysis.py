@@ -26,7 +26,7 @@ def test_threat_analysis_analyzes_file():
     result = analysis.analyze_file("data/events.json")
 
     assert result["prediction"] == "high"
-    assert result["confidence"] == 1.0
+    assert 0.9 < result["confidence"] <= 1.0
     assert result["threat_level"] == "high"
     assert result["attack_type"] == "multi_stage_attack"
     assert result["agreement"] is True

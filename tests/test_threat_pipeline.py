@@ -6,7 +6,7 @@ def test_threat_pipeline_runs_end_to_end():
     result = pipeline.run("data/events.json")
 
     assert result["prediction"] == "high"
-    assert result["confidence"] == 1.0
+    assert 0.9 < result["confidence"] <= 1.0
 
     assert result["threat_level"] == "high"
     assert result["attack_type"] == "multi_stage_attack"

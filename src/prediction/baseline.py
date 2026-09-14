@@ -2,29 +2,32 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
-    f1_score,
 )
+from sklearn.tree import DecisionTreeClassifier
 
 from src.prediction.dataset import split_dataset
-from src.prediction.persistence import load_model
 
 
-def evaluate_model(path=None):
+RANDOM_STATE = 42
+
+
+def train_baseline():
     X_train, X_test, y_train, y_test = split_dataset()
 
-    model = load_model()
+    model = DecisionTreeClassifier(
+        random_state=RANDOM_STATE,
+    )
+
+    model.fit(X_train, y_train)
 
     predictions = model.predict(X_test)
 
-    accuracy = accuracy_score(y_test, predictions)
-    macro_f1 = f1_score(
+    accuracy = accuracy_score(
         y_test,
         predictions,
-        average="macro",
     )
 
     print(f"Accuracy: {accuracy:.4f}")
-    print(f"Macro F1: {macro_f1:.4f}")
 
     print("\nClassification report:")
     print(
@@ -43,6 +46,8 @@ def evaluate_model(path=None):
         )
     )
 
+    return model
+
 
 if __name__ == "__main__":
-    evaluate_model()
+    train_baseline()

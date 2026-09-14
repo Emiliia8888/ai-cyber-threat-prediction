@@ -36,17 +36,35 @@ def test_extract_features():
     assert features["port_scan_followed_by_failed_login"] == 1
 
 def test_features_to_vector():
-
     features = {
         "port_scan_count": 1,
         "failed_login_count": 2,
         "successful_login_count": 1,
+        "event_count": 4,
+        "unique_source_count": 1,
+        "time_span_seconds": 120.0,
+        "failed_login_rate": 2 / 120,
+        "successful_login_rate": 1 / 120,
+        "rapid_failed_login_count": 1,
         "port_scan_followed_by_failed_login": 1,
+        "failed_login_followed_by_successful_login": 1,
     }
 
     vector = features_to_vector(features)
 
-    assert vector == [1, 2, 1, 1]
+    assert vector == [
+        1,
+        2,
+        1,
+        4,
+        1,
+        120.0,
+        2 / 120,
+        1 / 120,
+        1,
+        1,
+        1,
+    ]
 
 def test_port_scan_followed_by_failed_login():
     events = [

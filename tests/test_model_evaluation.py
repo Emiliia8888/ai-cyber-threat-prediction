@@ -9,8 +9,6 @@ def test_model_evaluation_delegates_to_evaluate_model():
     with patch(
         "src.application.model_evaluation.evaluate_model"
     ) as mock_evaluate:
-        evaluator.evaluate("data/evaluation.json")
+        evaluator.evaluate()
 
-    mock_evaluate.assert_called_once_with(
-        "data/evaluation.json"
-    )
+    mock_evaluate.assert_called_once_with()

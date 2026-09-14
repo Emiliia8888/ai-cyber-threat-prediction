@@ -82,7 +82,7 @@ def main():
 
     if args.evaluate:
         evaluator = ModelEvaluation()
-        evaluator.evaluate("data/evaluation.json")
+        evaluator.evaluate()
         return
 
     print("AI Cyber Threat Prediction System")

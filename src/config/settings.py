@@ -74,11 +74,6 @@ class Settings:
             "EVENTS_FILE", "data/events.json"
         )
     )
-    evaluation_file: str = field(
-        default_factory=lambda: _get_non_empty(
-            "EVALUATION_FILE", "data/evaluation.json"
-        )
-    )
     database_url: str = field(
         default_factory=lambda: _get_non_empty(
             "DATABASE_URL",

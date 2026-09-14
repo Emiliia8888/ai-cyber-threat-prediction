@@ -1,55 +1,29 @@
-from sklearn.tree import DecisionTreeClassifier
-
-from src.prediction.training_data import training_data
+from typing import Any
 
 
 FEATURE_NAMES = [
     "port_scan_count",
     "failed_login_count",
     "successful_login_count",
+    "event_count",
+    "unique_source_count",
+    "time_span_seconds",
+    "failed_login_rate",
+    "successful_login_rate",
+    "rapid_failed_login_count",
     "port_scan_followed_by_failed_login",
+    "failed_login_followed_by_successful_login",
 ]
 
-def prepare_data():
 
-    X = []
-    y = []
-
-    for features, label in training_data:
-        X.append(features)
-        y.append(label)
-
-    return X, y
-
-
-def create_model():
-
-    return DecisionTreeClassifier(random_state=42)
-
-
-def train_model(X, y):
-
-    model = create_model()
-
-    model.fit(X, y)
-
-    return model
-
-
-def build_model():
-
-    X, y = prepare_data()
-
-    return train_model(X, y)
-
-
-def predict_threat(model, features):
-
+def predict_threat(model: Any, features: list[float]) -> str:
     return model.predict([features])[0]
 
 
-def predict_threat_with_confidence(model, features):
-
+def predict_threat_with_confidence(
+    model: Any,
+    features: list[float],
+) -> tuple[str, float]:
     prediction = model.predict([features])[0]
     probabilities = model.predict_proba([features])[0]
 
@@ -59,7 +33,21 @@ def predict_threat_with_confidence(model, features):
     return prediction, confidence
 
 
-def get_feature_importance(model):
+def get_feature_importance(model: Any) -> dict[str, float]:
+    if hasattr(model, "feature_importances_"):
+        importance = model.feature_importances_
+    elif hasattr(model, "named_steps"):
+        final_model = model.named_steps.get("model")
 
-    return dict(zip(FEATURE_NAMES, model.feature_importances_))
+        if hasattr(final_model, "coef_"):
+            importance = abs(final_model.coef_).mean(axis=0)
+        else:
+            raise ValueError(
+                "Model does not expose feature importance."
+            )
+    else:
+        raise ValueError(
+            "Model does not expose feature importance."
+        )
 
+    return dict(zip(FEATURE_NAMES, importance))
