@@ -15,7 +15,7 @@ The project uses a layered architecture with application, domain, infrastructure
 * 11 ML features
 * Synthetic balanced ML dataset generation
 * Stratified train/test split
-* Logistic Regression production model
+* Random Forest production model
 * Random Forest and SVM benchmarks
 * Decision Tree baseline
 * Model comparison
@@ -149,7 +149,7 @@ The system follows a multi-stage analysis pipeline:
 3. Timestamp differences are calculated.
 4. Features are extracted from the event sequence.
 5. The ML prediction engine converts the extracted features into the model input vector.
-6. The saved Logistic Regression model predicts the threat level.
+6. The saved Random Forest model predicts the threat level.
 7. Prediction confidence is calculated from model probabilities.
 8. Rule-based security logic independently evaluates the event sequence.
 9. Correlations and attack chains are analysed.
@@ -185,7 +185,7 @@ Model Benchmarking
 5-Fold Cross-Validation
        │
        ▼
-Logistic Regression Selected
+Random Forest Selected
        │
        ▼
 Training on Full Dataset
@@ -288,38 +288,31 @@ src/prediction/dataset.py
 
 ## Model Comparison
 
-The project compares several machine-learning algorithms.
+The project compares several machine-learning algorithms using the same 11-feature dataset and the same stratified train/test split.
 
 ### Holdout Evaluation
 
-| Model                   |   Accuracy |   Macro F1 |
-| ----------------------- | ---------: | ---------: |
-| Random Forest           |     0.9950 |     0.9950 |
-| **Logistic Regression** | **1.0000** | **1.0000** |
-| SVM                     |     0.9950 |     0.9950 |
+| Model | Accuracy | Macro F1 |
+| --- | ---: | ---: |
+| **Random Forest** | **0.9300** | **0.9297** |
+| SVM | 0.9200 | 0.9193 |
+| Decision Tree | 0.9050 | 0.9046 |
+| Logistic Regression | 0.8400 | 0.8360 |
 
-The final production model is Logistic Regression.
+Random Forest achieved the strongest holdout performance and was selected as the final model.
 
 ### Cross-Validation
 
 Five-fold cross-validation produced:
 
-| Model                   | Mean Accuracy |        Std |
-| ----------------------- | ------------: | ---------: |
-| Decision Tree           |        0.9860 |     0.0086 |
-| Random Forest           |        0.9930 |     0.0068 |
-| **Logistic Regression** |    **0.9960** | **0.0037** |
-| **SVM**                 |    **0.9960** | **0.0037** |
+| Model | Mean Accuracy | Std |
+| --- | ---: | ---: |
+| **Random Forest** | **0.9100** | **0.0152** |
+| SVM | 0.9050 | 0.0212 |
+| Decision Tree | 0.8810 | 0.0284 |
+| Logistic Regression | 0.8370 | 0.0196 |
 
-Logistic Regression was selected for production because it provides:
-
-* competitive cross-validation performance
-* perfect holdout performance on the current synthetic dataset
-* probability estimates through `predict_proba`
-* simple and efficient inference
-* straightforward integration with the existing prediction abstraction
-
-Benchmark implementations are kept separately from the production prediction path.
+Random Forest was selected because it provided the best combination of holdout performance and cross-validation stability on the current synthetic dataset.
 
 ## Production Model
 
@@ -335,6 +328,8 @@ The model is loaded by the production prediction engine:
 src/prediction/legacy_prediction_engine.py
 ```
 
+The current production model is a `RandomForestClassifier` with 200 trees and `random_state=42`.
+
 Model persistence is implemented in:
 
 ```text
@@ -347,7 +342,7 @@ The model can be retrained with:
 python -m src.prediction.train
 ```
 
-This trains the final Logistic Regression model using the complete dataset and saves it to the `models/` directory.
+This trains the final Random Forest model using the complete dataset and saves it to the `models/` directory.
 
 ## Prediction Example
 
@@ -361,7 +356,7 @@ Example:
 
 ```text
 Prediction: high
-Confidence: 0.9910
+Confidence: 0.8700
 ```
 
 ## Model Evaluation
@@ -375,19 +370,10 @@ python -m src.main --evaluate
 Current evaluation on the 20% holdout set:
 
 ```text
-Accuracy: 1.0000
-Macro F1: 1.0000
+Accuracy: 0.9300
+Macro F1: 0.9297
 ```
 
-All four classes currently achieve:
-
-```text
-Precision: 1.00
-Recall:    1.00
-F1-score:  1.00
-```
-
-with 50 test samples per class.
 
 Confusion matrix:
 
@@ -635,7 +621,7 @@ Alert: CRITICAL SECURITY ALERT: multi_stage_attack detected (confidence: 98%)
 
 The prediction module supports feature-importance analysis.
 
-For models exposing coefficients, such as the production Logistic Regression model, the absolute coefficient magnitudes are used to estimate relative feature importance.
+For the Random Forest production model, feature importance is estimated using the model's impurity-based feature importance values.
 
 The feature names correspond to the 11 production ML features listed above.
 
@@ -666,7 +652,7 @@ The project currently provides a working cybersecurity threat detection and pred
 * stratified train/test split
 * model comparison
 * 5-fold cross-validation
-* Logistic Regression production model
+* Random Forest production model
 * model persistence
 * prediction confidence
 * rule-based threat assessment

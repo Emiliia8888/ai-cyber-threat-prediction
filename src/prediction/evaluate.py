@@ -6,13 +6,18 @@ from sklearn.metrics import (
 )
 
 from src.prediction.dataset import split_dataset
-from src.prediction.persistence import load_model
+from sklearn.ensemble import RandomForestClassifier
+
 
 
 def evaluate_model(path=None):
     X_train, X_test, y_train, y_test = split_dataset()
 
-    model = load_model()
+    model = RandomForestClassifier(
+        n_estimators=200,
+        random_state=42,
+    )
+    model.fit(X_train, y_train)
 
     predictions = model.predict(X_test)
 

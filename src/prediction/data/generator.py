@@ -35,54 +35,24 @@ def generate_event_sequence(label):
         k=random.randint(0, 2),
     )
 
+    available_sources = [source, *other_sources]
     events = []
 
     if label == "normal":
-        # Normal activity.
-        # Includes an explicit benign port_scan -> successful_login
-        # scenario so the model learns that this combination alone
-        # is not a multi-stage attack.
+        # Benign activity can still contain occasional suspicious-looking
+        # events. The important difference is the lack of a coherent attack
+        # sequence and generally slower activity.
 
         scenario = random.choice(
             [
                 "regular",
+                "failed_logins",
+                "port_scan",
                 "port_scan_then_success",
             ]
         )
 
-        if scenario == "port_scan_then_success":
-            events.append(
-                create_event(
-                    "port_scan",
-                    source,
-                    start,
-                )
-            )
-
-            start += timedelta(seconds=random.randint(90, 180))
-
-            events.append(
-                create_event(
-                    "successful_login",
-                    source,
-                    start,
-                )
-            )
-
-            additional_events = random.randint(1, 4)
-
-            for _ in range(additional_events):
-                start += timedelta(seconds=random.randint(90, 300))
-
-                events.append(
-                    create_event(
-                        "successful_login",
-                        random.choice([source, *other_sources]),
-                        start,
-                    )
-                )
-
-        else:
+        if scenario == "regular":
             event_count = random.randint(4, 8)
 
             for _ in range(event_count):
@@ -92,79 +62,122 @@ def generate_event_sequence(label):
                         "failed_login",
                         "port_scan",
                     ],
-                    weights=[0.85, 0.10, 0.05],
+                    weights=[0.75, 0.18, 0.07],
                 )[0]
 
-                start += timedelta(seconds=random.randint(90, 300))
+                start += timedelta(seconds=random.randint(60, 300))
 
                 events.append(
                     create_event(
                         event_type,
-                        random.choice([source, *other_sources]),
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
+
+        elif scenario == "failed_logins":
+            event_count = random.randint(2, 4)
+
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(45, 180))
+
+                events.append(
+                    create_event(
+                        "failed_login",
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
+
+        elif scenario == "port_scan":
+            event_count = random.randint(1, 3)
+
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(60, 240))
+
+                events.append(
+                    create_event(
+                        "port_scan",
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
+
+        elif scenario == "port_scan_then_success":
+            events.append(
+                create_event(
+                    "port_scan",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(60, 240))
+
+            events.append(
+                create_event(
+                    "successful_login",
+                    random.choice(available_sources),
+                    start,
+                )
+            )
+
+            additional_events = random.randint(1, 3)
+
+            for _ in range(additional_events):
+                start += timedelta(seconds=random.randint(60, 300))
+
+                events.append(
+                    create_event(
+                        random.choice(
+                            [
+                                "successful_login",
+                                "failed_login",
+                            ]
+                        ),
+                        random.choice(available_sources),
                         start,
                     )
                 )
 
     elif label == "low":
         # Low-risk suspicious activity.
-        # Failed logins are isolated by more than 60 seconds.
-        # No rapid failed-login pattern and no attack chain.
-
-        event_count = random.randint(3, 7)
-
-        for _ in range(event_count):
-            event_type = random.choices(
-                [
-                    "failed_login",
-                    "successful_login",
-                ],
-                weights=[0.80, 0.20],
-            )[0]
-
-            start += timedelta(seconds=random.randint(90, 240))
-
-            events.append(
-                create_event(
-                    event_type,
-                    source,
-                    start,
-                )
-            )
-
-    elif label == "medium":
-        # Medium-risk suspicious activity:
-        # repeated port scans OR repeated failed logins.
-        #
-        # Successful logins are deliberately excluded so that
-        # port_scan + successful_login remains a benign/normal
-        # combination unless a real multi-stage attack chain exists.
+        # Failed logins can sometimes happen relatively quickly,
+        # and successful logins are possible, but there is no coherent
+        # multi-stage attack chain.
 
         scenario = random.choice(
             [
-                "port_scan",
-                "failed_logins",
+                "isolated_failures",
+                "repeated_failures",
+                "mixed_login_activity",
             ]
         )
 
-        if scenario == "port_scan":
-            event_count = random.randint(2, 5)
+        if scenario == "isolated_failures":
+            event_count = random.randint(3, 6)
 
             for _ in range(event_count):
-                start += timedelta(seconds=random.randint(20, 120))
+                start += timedelta(seconds=random.randint(60, 240))
 
                 events.append(
                     create_event(
-                        "port_scan",
-                        random.choice([source, *other_sources]),
+                        random.choice(
+                            [
+                                "failed_login",
+                                "successful_login",
+                            ]
+                        ),
+                        source,
                         start,
                     )
                 )
 
-        elif scenario == "failed_logins":
+        elif scenario == "repeated_failures":
             event_count = random.randint(3, 6)
 
             for _ in range(event_count):
-                start += timedelta(seconds=random.randint(15, 45))
+                start += timedelta(seconds=random.randint(20, 90))
 
                 events.append(
                     create_event(
@@ -174,68 +187,249 @@ def generate_event_sequence(label):
                     )
                 )
 
-    elif label == "high":
-        # High-risk multi-stage attack:
-        #
-        # reconnaissance
-        #       ↓
-        # port scan
-        #       ↓
-        # failed login
-        #       ↓
-        # successful login
-        #
-        # All events use the same source and happen rapidly.
+        elif scenario == "mixed_login_activity":
+            event_count = random.randint(4, 7)
 
-        events.append(
-            create_event(
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(30, 150))
+
+                events.append(
+                    create_event(
+                        random.choices(
+                            [
+                                "failed_login",
+                                "successful_login",
+                            ],
+                            weights=[0.65, 0.35],
+                        )[0],
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
+
+    elif label == "medium":
+        # Medium-risk suspicious activity.
+        # This class intentionally overlaps with both low and high:
+        # repeated scans, repeated failures, and occasional successful
+        # logins can occur, but there is no complete high-risk chain.
+
+        scenario = random.choice(
+            [
                 "port_scan",
-                source,
-                start,
-            )
+                "failed_logins",
+                "scan_then_failed_login",
+                "failed_then_success",
+            ]
         )
 
-        start += timedelta(seconds=random.randint(5, 30))
+        if scenario == "port_scan":
+            event_count = random.randint(2, 5)
 
-        events.append(
-            create_event(
-                "failed_login",
-                source,
-                start,
-            )
-        )
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(15, 120))
 
-        start += timedelta(seconds=random.randint(5, 30))
+                events.append(
+                    create_event(
+                        "port_scan",
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
 
-        events.append(
-            create_event(
-                "successful_login",
-                source,
-                start,
-            )
-        )
+        elif scenario == "failed_logins":
+            event_count = random.randint(3, 6)
 
-        # Add some additional activity around the attack chain.
-        additional_events = random.randint(1, 4)
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(10, 60))
 
-        for _ in range(additional_events):
-            start += timedelta(seconds=random.randint(5, 45))
+                events.append(
+                    create_event(
+                        "failed_login",
+                        source,
+                        start,
+                    )
+                )
 
-            event_type = random.choice(
-                [
-                    "failed_login",
-                    "successful_login",
-                    "port_scan",
-                ]
-            )
-
+        elif scenario == "scan_then_failed_login":
             events.append(
                 create_event(
-                    event_type,
+                    "port_scan",
                     source,
                     start,
                 )
             )
+
+            start += timedelta(seconds=random.randint(10, 60))
+
+            events.append(
+                create_event(
+                    "failed_login",
+                    source,
+                    start,
+                )
+            )
+
+            additional_events = random.randint(1, 3)
+
+            for _ in range(additional_events):
+                start += timedelta(seconds=random.randint(20, 120))
+
+                events.append(
+                    create_event(
+                        random.choice(
+                            [
+                                "port_scan",
+                                "failed_login",
+                            ]
+                        ),
+                        source,
+                        start,
+                    )
+                )
+
+        elif scenario == "failed_then_success":
+            event_count = random.randint(3, 5)
+
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(15, 90))
+
+                events.append(
+                    create_event(
+                        random.choice(
+                            [
+                                "failed_login",
+                                "successful_login",
+                            ]
+                        ),
+                        source,
+                        start,
+                    )
+                )
+
+    elif label == "high":
+        # High-risk activity.
+        #
+        # Most samples contain the full:
+        #
+        # port_scan -> failed_login -> successful_login
+        #
+        # chain, but timing and surrounding activity vary.
+        # Some high-risk samples contain additional noise so that
+        # individual binary chain features are not perfect predictors.
+
+        scenario = random.choice(
+            [
+                "rapid_attack_chain",
+                "slower_attack_chain",
+                "noisy_attack_chain",
+            ]
+        )
+
+        if scenario == "rapid_attack_chain":
+            events.append(
+                create_event(
+                    "port_scan",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(5, 25))
+
+            events.append(
+                create_event(
+                    "failed_login",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(5, 25))
+
+            events.append(
+                create_event(
+                    "successful_login",
+                    source,
+                    start,
+                )
+            )
+
+        elif scenario == "slower_attack_chain":
+            events.append(
+                create_event(
+                    "port_scan",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(30, 90))
+
+            events.append(
+                create_event(
+                    "failed_login",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(30, 90))
+
+            events.append(
+                create_event(
+                    "successful_login",
+                    source,
+                    start,
+                )
+            )
+
+        elif scenario == "noisy_attack_chain":
+            events.append(
+                create_event(
+                    "port_scan",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(5, 30))
+
+            events.append(
+                create_event(
+                    "failed_login",
+                    source,
+                    start,
+                )
+            )
+
+            start += timedelta(seconds=random.randint(5, 30))
+
+            events.append(
+                create_event(
+                    "successful_login",
+                    source,
+                    start,
+                )
+            )
+
+            additional_events = random.randint(2, 5)
+
+            for _ in range(additional_events):
+                start += timedelta(seconds=random.randint(5, 90))
+
+                events.append(
+                    create_event(
+                        random.choice(
+                            [
+                                "failed_login",
+                                "successful_login",
+                                "port_scan",
+                            ]
+                        ),
+                        random.choice(available_sources),
+                        start,
+                    )
+                )
 
     else:
         raise ValueError(f"Unknown label: {label}")
