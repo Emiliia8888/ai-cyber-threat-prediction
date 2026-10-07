@@ -176,13 +176,12 @@ Stratified Train/Test Split
        ▼
 Model Benchmarking
        │
-       ├── Decision Tree
        ├── Random Forest
        ├── Logistic Regression
        └── SVM
        │
        ▼
-5-Fold Cross-Validation
+Holdout Evaluation
        │
        ▼
 Random Forest Selected
@@ -288,31 +287,55 @@ src/prediction/dataset.py
 
 ## Model Comparison
 
-The project compares several machine-learning algorithms using the same 11-feature dataset and the same stratified train/test split.
+The project compares several machine-learning algorithms using the same 11-feature synthetic cybersecurity dataset and the same stratified 80/20 train/test split.
 
 ### Holdout Evaluation
 
+The current holdout evaluation produced:
+
 | Model | Accuracy | Macro F1 |
 | --- | ---: | ---: |
-| **Random Forest** | **0.9300** | **0.9297** |
-| SVM | 0.9200 | 0.9193 |
-| Decision Tree | 0.9050 | 0.9046 |
-| Logistic Regression | 0.8400 | 0.8360 |
+| **Random Forest** | **0.9050** | **0.9048** |
+| SVM | 0.8850 | 0.8848 |
+| Logistic Regression | 0.8000 | 0.7985 |
 
-Random Forest achieved the strongest holdout performance and was selected as the final model.
+Random Forest achieved the strongest holdout performance and was selected as the production model.
 
-### Cross-Validation
+### Final Evaluation
 
-Five-fold cross-validation produced:
+The final Random Forest evaluation on the 20% holdout set produced:
 
-| Model | Mean Accuracy | Std |
-| --- | ---: | ---: |
-| **Random Forest** | **0.9100** | **0.0152** |
-| SVM | 0.9050 | 0.0212 |
-| Decision Tree | 0.8810 | 0.0284 |
-| Logistic Regression | 0.8370 | 0.0196 |
+```text
+Accuracy: 0.9050
+Macro F1: 0.9048
+```
 
-Random Forest was selected because it provided the best combination of holdout performance and cross-validation stability on the current synthetic dataset.
+Classification report:
+
+```text
+              precision    recall  f1-score   support
+
+high              1.00      1.00      1.00        50
+low               0.82      0.90      0.86        50
+medium            0.93      0.80      0.86        50
+normal            0.88      0.92      0.90        50
+
+accuracy                              0.91       200
+macro avg         0.91      0.91      0.90       200
+```
+
+Confusion matrix:
+
+```text
+[[50  0  0  0]
+ [ 0 45  2  3]
+ [ 0  7 40  3]
+ [ 0  3  1 46]]
+```
+
+The Random Forest performs particularly well on the `high` class, while the main remaining confusion occurs between `low` and `medium`.
+
+These results describe performance on the current synthetic benchmark dataset and should not be interpreted as production-world accuracy.
 
 ## Production Model
 
@@ -320,12 +343,6 @@ The trained production model is stored as:
 
 ```text
 models/threat_model.joblib
-```
-
-The model is loaded by the production prediction engine:
-
-```text
-src/prediction/legacy_prediction_engine.py
 ```
 
 The current production model is a `RandomForestClassifier` with 200 trees and `random_state=42`.
@@ -356,36 +373,28 @@ Example:
 
 ```text
 Prediction: high
-Confidence: 0.8700
 ```
+
+The model also provides class probabilities through `predict_proba`, which are used as prediction confidence information.
 
 ## Model Evaluation
 
-Run the application-level model evaluation with:
+Run the final model evaluation with:
 
 ```bash
-python -m src.main --evaluate
+python -m src.prediction.final_evaluation
 ```
 
-Current evaluation on the 20% holdout set:
+The evaluation compares the supported models on the same stratified holdout set and reports accuracy, macro F1, classification reports, and confusion matrices.
+
+The current Random Forest benchmark is:
 
 ```text
-Accuracy: 0.9300
-Macro F1: 0.9297
+Accuracy: 0.9050
+Macro F1: 0.9048
 ```
 
-
-Confusion matrix:
-
-```text
-[[50  0  0  0]
- [ 0 50  0  0]
- [ 0  0 50  0]
- [ 0  0  0 50]]
-```
-
-Again, these results describe performance on the current synthetic benchmark dataset and should not be interpreted as production-world performance.
-
+These results are based on the synthetic development dataset and are intended for development and architectural validation rather than production-world performance claims.
 ## Threat Levels
 
 The system supports four threat levels:

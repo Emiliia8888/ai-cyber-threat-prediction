@@ -1,7 +1,24 @@
 from datetime import datetime
 
+def get_event_type(event):
+    if isinstance(event, dict):
+        return event["type"]
+    return event.event_type
+
+
+def get_event_source(event):
+    if isinstance(event, dict):
+        return event["source"]
+    return event.source
+
+
+def get_event_timestamp(event):
+    if isinstance(event, dict):
+        return event["timestamp"]
+    return event.timestamp
+
 def count_events(events, event_type):
-    return sum(1 for event in events if event["type"] == event_type)
+    return sum(1 for event in events if get_event_type(event) == event_type)
 
 
 def count_failed_logins(events):
@@ -17,13 +34,13 @@ def count_successful_logins(events):
 
 
 def get_time_since_previous(event, previous_event):
-    time_difference = event.get("time_since_previous")
+    time_difference = event.get("time_since_previous") if isinstance(event, dict) else None
 
     if time_difference is not None:
         return time_difference.total_seconds()
 
-    current_timestamp = event["timestamp"]
-    previous_timestamp = previous_event["timestamp"]
+    current_timestamp = get_event_timestamp(event)
+    previous_timestamp = get_event_timestamp(previous_event)
 
     if isinstance(current_timestamp, str):
         current_timestamp = datetime.strptime(
@@ -41,7 +58,7 @@ def get_time_since_previous(event, previous_event):
 
 
 def count_unique_sources(events):
-    return len({event["source"] for event in events})
+    return len({get_event_source(event) for event in events})
 
 
 def calculate_time_span(events):
@@ -51,7 +68,7 @@ def calculate_time_span(events):
     timestamps = []
 
     for event in events:
-        timestamp = event["timestamp"]
+        timestamp = get_event_timestamp(event)
 
         if isinstance(timestamp, str):
             timestamp = datetime.strptime(
@@ -79,16 +96,15 @@ def count_rapid_failed_logins(events, threshold_seconds=60):
         previous = events[i - 1]
 
         if (
-            current["type"] == "failed_login"
-            and previous["type"] == "failed_login"
-            and current["source"] == previous["source"]
+            get_event_type(current) == "failed_login"
+            and get_event_type(previous) == "failed_login"
+            and get_event_source(current) == get_event_source(previous)
             and get_time_since_previous(current, previous)
             <= threshold_seconds
         ):
             count += 1
 
     return count
-
 
 def detect_port_scan_followed_by_failed_login(
     events,
@@ -99,9 +115,9 @@ def detect_port_scan_followed_by_failed_login(
         next_event = events[i + 1]
 
         if (
-            current["type"] == "port_scan"
-            and next_event["type"] == "failed_login"
-            and current["source"] == next_event["source"]
+            get_event_type(current) == "port_scan"
+            and get_event_type(next_event) == "failed_login"
+            and get_event_source(current) == get_event_source(next_event)
             and get_time_since_previous(next_event, current)
             <= threshold_seconds
         ):
@@ -119,9 +135,9 @@ def detect_failed_login_followed_by_successful_login(
         next_event = events[i + 1]
 
         if (
-            current["type"] == "failed_login"
-            and next_event["type"] == "successful_login"
-            and current["source"] == next_event["source"]
+            get_event_type(current) == "failed_login"
+            and get_event_type(next_event) == "successful_login"
+            and get_event_source(current) == get_event_source(next_event)
             and get_time_since_previous(next_event, current)
             <= threshold_seconds
         ):

@@ -322,10 +322,60 @@ def generate_event_sequence(label):
                 "rapid_attack_chain",
                 "slower_attack_chain",
                 "noisy_attack_chain",
+                "brute_force",
+                "brute_force_success",
             ]
         )
 
-        if scenario == "rapid_attack_chain":
+        if scenario == "brute_force":
+            event_count = random.randint(12, 20)
+
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(3, 15))
+                events.append(
+                    create_event(
+                        "failed_login",
+                        source,
+                        start,
+                    )
+                )
+
+            start += timedelta(seconds=random.randint(1800, 7200))
+
+        elif scenario == "brute_force_success":
+            event_count = random.randint(12, 20)
+
+            for _ in range(event_count):
+                start += timedelta(seconds=random.randint(3, 15))
+                events.append(
+                    create_event(
+                        "failed_login",
+                        source,
+                        start,
+                    )
+                )
+
+            # Successful login immediately after the brute-force attempts.
+            start += timedelta(seconds=random.randint(3, 15))
+            events.append(
+                create_event(
+                    "successful_login",
+                    source,
+                    start,
+                )
+            )
+
+            # Keep the attack sequence realistic over a longer time span.
+            start += timedelta(seconds=random.randint(1800, 7200))
+            events.append(
+                create_event(
+                    "failed_login",
+                    source,
+                    start,
+                )
+            )
+
+        elif scenario == "rapid_attack_chain":
             events.append(
                 create_event(
                     "port_scan",
