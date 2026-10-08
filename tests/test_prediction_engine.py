@@ -1,8 +1,8 @@
-from src.prediction.legacy_prediction_engine import LegacyPredictionEngine
+from src.prediction.ml_prediction_engine import MLPredictionEngine
 
 
-def test_legacy_prediction_engine_predicts_high_threat():
-    engine = LegacyPredictionEngine()
+def test_ml_prediction_engine_predicts_high_threat():
+    engine = MLPredictionEngine()
 
     features = {
         "port_scan_count": 1,
@@ -25,8 +25,8 @@ def test_legacy_prediction_engine_predicts_high_threat():
     assert confidence > 0.9
 
 
-def test_legacy_prediction_engine_predicts_normal_threat():
-    engine = LegacyPredictionEngine()
+def test_ml_prediction_engine_predicts_normal_threat():
+    engine = MLPredictionEngine()
 
     features = {
         "port_scan_count": 0,

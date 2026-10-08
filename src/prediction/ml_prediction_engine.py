@@ -6,7 +6,7 @@ from src.prediction.model import predict_threat_with_confidence
 from src.prediction.persistence import load_model
 
 
-class LegacyPredictionEngine(PredictionEnginePort):
+class MLPredictionEngine(PredictionEnginePort):
     """
     Adapter connecting the application prediction interface
     with the persisted ML model.

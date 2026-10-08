@@ -44,8 +44,8 @@ from src.infrastructure.workers.in_memory_analysis_worker import (
 
 from src.config.settings import DEFAULT_SETTINGS, Settings
 from src.pipeline.threat_pipeline import ThreatPipeline
-from src.prediction.legacy_prediction_engine import (
-    LegacyPredictionEngine,
+from src.prediction.ml_prediction_engine import (
+    MLPredictionEngine,
 )
 from src.preprocessing.legacy_preprocessor import LegacyPreprocessor
 from src.risk.legacy_risk_engine import LegacyRiskEngine
@@ -70,7 +70,7 @@ def create_pipeline(
         preprocessing=preprocessing or LegacyPreprocessor(),
         feature_engine=feature_engine or LegacyFeatureEngine(),
         prediction_engine=prediction_engine
-        or LegacyPredictionEngine(),
+        or MLPredictionEngine(),
         risk_engine=risk_engine
         or LegacyRiskEngine(
             correlation_engine=correlation_engine,
