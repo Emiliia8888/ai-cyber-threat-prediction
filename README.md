@@ -395,6 +395,82 @@ Macro F1: 0.9048
 ```
 
 These results are based on the synthetic development dataset and are intended for development and architectural validation rather than production-world performance claims.
+
+## Real-World Dataset Experiments
+
+The project evaluates machine learning models on two public cybersecurity network-flow datasets: UNSW-NB15 and CIC-IDS2017.
+
+These datasets contain network-flow records rather than the event sequences used by the existing application pipeline. They are evaluated through a separate ML research and inference path to preserve the existing application architecture.
+
+### UNSW-NB15
+
+The experiments include categorical encoding, numerical preprocessing, invalid-value handling, feature engineering, class balancing and multiclass model comparison.
+
+Best result obtained:
+
+| Model | Accuracy | Macro F1 |
+| --- | ---: | ---: |
+| XGBoost with feature engineering and class balancing | 0.6774 | 0.5247 |
+
+The macro F1 score highlights the difficulty of identifying minority attack classes.
+
+### CIC-IDS2017
+
+The CIC-IDS2017 experiments use network-flow features, preprocessing and feature engineering. The feature engineering step adds 26 derived features, resulting in 103 model input features.
+
+#### Stratified multiclass benchmark
+
+A Random Forest model achieved the following results on a stratified 80/20 train/test split:
+
+| Metric | Result |
+| --- | ---: |
+| Accuracy | 0.9939 |
+| Macro F1 | 0.8484 |
+| Weighted F1 | 0.9956 |
+
+This is an IID benchmark, not a guarantee of real-world detection accuracy. Performance was weaker for minority classes, particularly Bot and Web Attack categories.
+
+#### Scenario-based evaluation
+
+A separate experiment trained on Monday-to-Thursday captures and tested on Friday captures.
+
+Training captures:
+- Benign-Monday
+- Bruteforce-Tuesday
+- DoS-Wednesday
+- Infiltration-Thursday
+- WebAttacks-Thursday
+
+Test captures:
+- Botnet-Friday
+- DDoS-Friday
+- Portscan-Friday
+
+Some test attack classes, including DDoS, PortScan and Bot, were absent from training. A supervised classifier cannot learn a distinct class label it has never seen. This experiment illustrates why distribution shift and unseen attacks must be evaluated separately from a random stratified split.
+
+#### Saved model and inference
+
+The CIC model is stored separately from the event-based model:
+
+`models/cic_multiclass_random_forest.joblib`
+
+Model persistence is implemented in `src/prediction/real_data/cic_model_persistence.py`.
+
+The standalone inference engine is implemented in `src/prediction/real_data/cic_prediction_engine.py`. It applies feature engineering and preprocessing before returning a predicted class and confidence.
+
+Run the inference-engine test:
+
+```bash
+python -m pytest tests/test_cic_prediction_engine.py -v
+```
+
+#### Separate ML paths
+
+- **Event-based application model:** uses 11 event-sequence features and `models/threat_model.joblib`.
+- **Network-flow research model:** uses dataset-specific features and preprocessing, with the CIC model stored in `models/cic_multiclass_random_forest.joblib`.
+
+Keeping these paths separate avoids forcing incompatible network-flow inputs into the existing application pipeline.
+
 ## Threat Levels
 
 The system supports four threat levels:
