@@ -37,6 +37,7 @@ def normalize_labels(df):
     result["Label"] = (
         result["Label"]
         .astype(str)
+        .str.replace("\uFFFD", " ", regex=False)
         .str.replace(r"\s+", " ", regex=True)
         .str.strip()
     )

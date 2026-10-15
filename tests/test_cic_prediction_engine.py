@@ -1,9 +1,15 @@
 import numpy as np
+import pandas as pd
 
 import src.prediction.real_data.cic_prediction_engine as prediction_engine
 
 
 class FakePreprocessor:
+    n_features_in_ = 2
+
+    def get_feature_names_out(self):
+        return np.array(["feature_1", "feature_2"])
+
     def transform(self, dataframe):
         assert "Total Packets" in dataframe.columns
         assert "Total Bytes" in dataframe.columns
@@ -11,69 +17,87 @@ class FakePreprocessor:
 
 
 class FakeModel:
-    def predict(self, processed):
-        assert processed.shape == (1, 2)
-        return np.array([0])
+    n_features_in_ = 2
+
+    def __init__(self, probabilities):
+        self.probabilities = np.array(probabilities, dtype=float)
 
     def predict_proba(self, processed):
-        return np.array([[0.9, 0.1]])
+        assert processed.shape == (1, 2)
+        return self.probabilities.reshape(1, -1)
 
 
 class FakeEncoder:
+    classes_ = np.array(["Benign", "Attack", "Web Attack XSS"])
+
     def inverse_transform(self, predictions):
-        return np.array(["Benign"])
+        return self.classes_[predictions]
 
 
-def test_cic_prediction_engine_predicts_benign(monkeypatch):
+def make_engine(monkeypatch, probabilities, xss_threshold=0.42):
     artifact = {
-        "model": FakeModel(),
+        "model": FakeModel(probabilities),
         "preprocessor": FakePreprocessor(),
         "label_encoder": FakeEncoder(),
+        "xss_index": 2,
+        "xss_threshold": xss_threshold,
     }
 
     monkeypatch.setattr(
         prediction_engine,
         "load_cic_model",
-        lambda: artifact,
+        lambda path=None: artifact,
     )
 
-    engine = prediction_engine.CICPredictionEngine()
+    # Isolate prediction-engine tests from feature-engineering details.
+    monkeypatch.setattr(
+        prediction_engine,
+        "add_cic_features",
+        lambda dataframe: dataframe.assign(
+            **{"Total Packets": 15, "Total Bytes": 1500}
+        ),
+    )
 
-    sample = {
-        "Total Fwd Packets": 10,
-        "Total Backward Packets": 5,
-        "Fwd Packets Length Total": 1000,
-        "Bwd Packets Length Total": 500,
-        "Flow Duration": 1000000,
-        "Fwd Packet Length Mean": 100,
-        "Bwd Packet Length Mean": 100,
-        "Flow IAT Max": 100,
-        "Flow IAT Min": 10,
-        "Fwd IAT Max": 100,
-        "Fwd IAT Min": 10,
-        "Bwd IAT Max": 100,
-        "Bwd IAT Min": 10,
-        "Fwd IAT Mean": 20,
-        "Bwd IAT Mean": 20,
-        "Fwd Header Length": 20,
-        "Bwd Header Length": 20,
-        "SYN Flag Count": 1,
-        "ACK Flag Count": 1,
-        "FIN Flag Count": 0,
-        "RST Flag Count": 0,
-        "PSH Flag Count": 0,
-        "URG Flag Count": 0,
-        "ECE Flag Count": 0,
-        "CWE Flag Count": 0,
-        "Active Mean": 100,
-        "Idle Mean": 100,
-        "Fwd Packets/s": 10,
-        "Bwd Packets/s": 5,
-        "Flow Packets/s": 15,
-        "Down/Up Ratio": 0.5,
-    }
+    monkeypatch.setattr(
+        prediction_engine,
+        "clean_invalid_values",
+        lambda dataframe: dataframe,
+    )
 
-    prediction, confidence = engine.predict(sample)
+    return prediction_engine.CICPredictionEngine()
+
+
+def test_predicts_benign_when_xss_probability_is_below_threshold(monkeypatch):
+    engine = make_engine(monkeypatch, [0.90, 0.08, 0.02])
+
+    prediction, confidence = engine.predict({"Protocol": 6})
 
     assert prediction == "Benign"
-    assert confidence == 0.9
+    assert confidence == 0.90
+
+
+def test_predicts_highest_probability_class_below_xss_threshold(monkeypatch):
+    engine = make_engine(monkeypatch, [0.40, 0.35, 0.25])
+
+    prediction, confidence = engine.predict({"Protocol": 6})
+
+    assert prediction == "Benign"
+    assert confidence == 0.40
+
+
+def test_predicts_xss_at_threshold(monkeypatch):
+    engine = make_engine(monkeypatch, [0.40, 0.35, 0.42])
+
+    prediction, confidence = engine.predict({"Protocol": 6})
+
+    assert prediction == "Web Attack XSS"
+    assert confidence == 0.42
+
+
+def test_predicts_xss_above_threshold(monkeypatch):
+    engine = make_engine(monkeypatch, [0.40, 0.35, 0.50])
+
+    prediction, confidence = engine.predict({"Protocol": 6})
+
+    assert prediction == "Web Attack XSS"
+    assert confidence == 0.50

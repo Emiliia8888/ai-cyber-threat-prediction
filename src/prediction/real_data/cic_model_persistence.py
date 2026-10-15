@@ -3,25 +3,18 @@ from pathlib import Path
 import joblib
 
 
-MODEL_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "models"
-    / "cic_multiclass_random_forest.joblib"
+MODEL_DIR = Path(__file__).resolve().parents[3] / "models"
+
+MODEL_PATH = MODEL_DIR / "cic_multiclass_random_forest.joblib"
+
+XGBOOST_TUNING_MODEL_PATH = (
+    MODEL_DIR / "cic_multiclass_xgboost_tuning_normalized.joblib"
 )
 
 
-def save_cic_model(
-    model,
-    preprocessor,
-    encoder,
-    path=MODEL_PATH,
-):
+def save_cic_model(model, preprocessor, encoder, path=MODEL_PATH):
     output_path = Path(path)
-
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     artifact = {
         "model": model,
@@ -29,11 +22,7 @@ def save_cic_model(
         "label_encoder": encoder,
     }
 
-    joblib.dump(
-        artifact,
-        output_path,
-    )
-
+    joblib.dump(artifact, output_path)
     return output_path
 
 
