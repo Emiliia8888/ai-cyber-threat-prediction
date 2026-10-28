@@ -22,3 +22,7 @@ models/*.joblib
 *.before_*
 *.bak
 *.py.bak
+
+# Local empty files
+/chsh
+/python
