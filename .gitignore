@@ -3,26 +3,13 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .DS_Store
+
 # ML datasets
 *.parquet
 *.csv
 
 # Trained ML models
 models/*.joblib
-
-# Generated ML reports and experiment artifacts
-reports/
-
-# Serialized model exports and intermediate artifacts
-models/*.json
-
-# Local temporary files and backups
-*.backup_*
-*.before_*
-*.bak
-*.py.bak
-chsh
-python
 
 # Generated ML reports and experiment artifacts
 /reports/
