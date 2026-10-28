@@ -49,6 +49,7 @@ class CICPredictionEngine:
                 "Model and preprocessor feature counts do not match."
             )
 
+
     def predict(
         self,
         features: dict[str, Any],
@@ -56,17 +57,63 @@ class CICPredictionEngine:
         """
         Predict a CIC-IDS2017 traffic class.
 
+        Raises:
+            ValueError: If required input features are missing.
+
         Returns:
             A tuple containing the predicted class label and its
             predicted probability.
         """
-        dataframe = pd.DataFrame([features])
+        required_features = [
+            "Total Fwd Packets",
+            "Total Backward Packets",
+            "Fwd Packets Length Total",
+            "Bwd Packets Length Total",
+            "Flow Duration",
+            "Fwd Packet Length Mean",
+            "Bwd Packet Length Mean",
+            "Flow IAT Max",
+            "Flow IAT Min",
+            "Fwd IAT Max",
+            "Fwd IAT Min",
+            "Bwd IAT Max",
+            "Bwd IAT Min",
+            "Fwd IAT Mean",
+            "Bwd IAT Mean",
+            "Fwd Header Length",
+            "Bwd Header Length",
+            "SYN Flag Count",
+            "ACK Flag Count",
+            "FIN Flag Count",
+            "RST Flag Count",
+            "PSH Flag Count",
+            "URG Flag Count",
+            "ECE Flag Count",
+            "CWE Flag Count",
+            "Active Mean",
+            "Idle Mean",
+            "Fwd Packets/s",
+            "Bwd Packets/s",
+            "Flow Packets/s",
+            "Down/Up Ratio",
+        ]
 
+        missing = [
+            name for name in required_features
+            if name not in features
+        ]
+
+        if missing:
+            raise ValueError(
+                "Missing required CIC-IDS2017 features: "
+                + ", ".join(missing)
+            )
+
+        dataframe = pd.DataFrame([features])
         dataframe = add_cic_features(dataframe)
         dataframe = clean_invalid_values(dataframe)
 
         processed = self._preprocessor.transform(dataframe)
-
         probabilities = self._model.predict_proba(processed)[0]
 
         if len(probabilities) != len(self._encoder.classes_):
@@ -76,8 +123,6 @@ class CICPredictionEngine:
 
         prediction = int(probabilities.argmax())
 
-        # Override the top prediction when the XSS probability
-        # reaches the threshold selected during validation.
         if probabilities[self._xss_index] >= self._xss_threshold:
             prediction = self._xss_index
 

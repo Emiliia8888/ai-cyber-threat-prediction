@@ -1,5 +1,7 @@
+
 import numpy as np
 import pandas as pd
+import pytest
 
 import src.prediction.real_data.cic_prediction_engine as prediction_engine
 
@@ -67,10 +69,47 @@ def make_engine(monkeypatch, probabilities, xss_threshold=0.42):
     return prediction_engine.CICPredictionEngine()
 
 
+# Minimal complete set of fields required by add_cic_features().
+VALID_FEATURES = {
+    "Protocol": 6,
+    "Total Fwd Packets": 10,
+    "Total Backward Packets": 5,
+    "Fwd Packets Length Total": 1000,
+    "Bwd Packets Length Total": 500,
+    "Flow Duration": 1_000_000,
+    "Fwd Packet Length Mean": 100,
+    "Bwd Packet Length Mean": 100,
+    "Flow IAT Max": 100,
+    "Flow IAT Min": 10,
+    "Fwd IAT Max": 100,
+    "Fwd IAT Min": 10,
+    "Bwd IAT Max": 100,
+    "Bwd IAT Min": 10,
+    "Fwd IAT Mean": 50,
+    "Bwd IAT Mean": 50,
+    "Fwd Header Length": 100,
+    "Bwd Header Length": 50,
+    "SYN Flag Count": 1,
+    "ACK Flag Count": 1,
+    "FIN Flag Count": 0,
+    "RST Flag Count": 0,
+    "PSH Flag Count": 0,
+    "URG Flag Count": 0,
+    "ECE Flag Count": 0,
+    "CWE Flag Count": 0,
+    "Active Mean": 100,
+    "Idle Mean": 100,
+    "Fwd Packets/s": 10,
+    "Bwd Packets/s": 5,
+    "Flow Packets/s": 15,
+    "Down/Up Ratio": 0.5,
+}
+
+
 def test_predicts_benign_when_xss_probability_is_below_threshold(monkeypatch):
     engine = make_engine(monkeypatch, [0.90, 0.08, 0.02])
 
-    prediction, confidence = engine.predict({"Protocol": 6})
+    prediction, confidence = engine.predict(VALID_FEATURES)
 
     assert prediction == "Benign"
     assert confidence == 0.90
@@ -79,7 +118,7 @@ def test_predicts_benign_when_xss_probability_is_below_threshold(monkeypatch):
 def test_predicts_highest_probability_class_below_xss_threshold(monkeypatch):
     engine = make_engine(monkeypatch, [0.40, 0.35, 0.25])
 
-    prediction, confidence = engine.predict({"Protocol": 6})
+    prediction, confidence = engine.predict(VALID_FEATURES)
 
     assert prediction == "Benign"
     assert confidence == 0.40
@@ -88,7 +127,7 @@ def test_predicts_highest_probability_class_below_xss_threshold(monkeypatch):
 def test_predicts_xss_at_threshold(monkeypatch):
     engine = make_engine(monkeypatch, [0.40, 0.35, 0.42])
 
-    prediction, confidence = engine.predict({"Protocol": 6})
+    prediction, confidence = engine.predict(VALID_FEATURES)
 
     assert prediction == "Web Attack XSS"
     assert confidence == 0.42
@@ -97,7 +136,17 @@ def test_predicts_xss_at_threshold(monkeypatch):
 def test_predicts_xss_above_threshold(monkeypatch):
     engine = make_engine(monkeypatch, [0.40, 0.35, 0.50])
 
-    prediction, confidence = engine.predict({"Protocol": 6})
+    prediction, confidence = engine.predict(VALID_FEATURES)
 
     assert prediction == "Web Attack XSS"
     assert confidence == 0.50
+
+
+def test_predict_rejects_missing_required_features(monkeypatch):
+    engine = make_engine(monkeypatch, [0.90, 0.08, 0.02])
+
+    with pytest.raises(
+        ValueError,
+        match="Missing required CIC-IDS2017 features",
+    ):
+        engine.predict({"Protocol": 6})
