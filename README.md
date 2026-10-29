@@ -471,6 +471,23 @@ python -m pytest tests/test_cic_prediction_engine.py -v
 
 Keeping these paths separate avoids forcing incompatible network-flow inputs into the existing application pipeline.
 
+## CIC Botnet Generalization
+
+A separate binary XGBoost experiment evaluated a model trained on CIC-IDS2017 against the CIC-IDS2018 Botnet-Friday dataset.
+
+At the default threshold of 0.5, cross-dataset Bot recall was approximately 0.018%, despite a ROC-AUC of 0.9372. Lowering the threshold to 0.005 increased recall to approximately 95.5%, but the benign false-positive rate rose to approximately 9.0%.
+
+A separate CIC-IDS2018 within-dataset block validation reported near-perfect metrics. This result is not evidence of cross-dataset generalization: the evaluation used contiguous row blocks, not a verified timestamp-based split, and potential dataset dependencies have not been ruled out.
+
+A controlled five-seed ECE Flag Count ablation found identical results between the baseline and the zeroed-feature variant. Removing ECE increased variability on CIC-IDS2018, so ECE remains in the feature pipeline for now.
+
+Detailed methodology, results and limitations:
+
+- [CIC Botnet Generalization Final Report](reports/CIC_BOTNET_GENERALIZATION_FINAL_REPORT.md)
+- [ECE Flag Count Ablation Final Report](reports/cic_botnet_ece_controlled/FINAL_REPORT.md)
+
+These experiments demonstrate the importance of cross-dataset validation and threshold selection. They do not establish production readiness.
+
 ## Threat Levels
 
 The system supports four threat levels:
@@ -634,7 +651,7 @@ python -m pytest
 Current result:
 
 ```text
-156 passed, 1 warning
+173 passed, 1 warning
 ```
 
 The tests cover:
