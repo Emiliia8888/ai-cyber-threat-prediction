@@ -13,6 +13,9 @@ models/*.joblib
 
 # Generated ML reports and experiment artifacts
 /reports/
+!/reports/
+/reports/*
+!/reports/README.md
 
 # Serialized model exports and intermediate artifacts
 /models/*.json
