@@ -485,6 +485,7 @@ Detailed methodology, results and limitations:
 
 - [CIC Botnet Generalization Final Report](reports/CIC_BOTNET_GENERALIZATION_FINAL_REPORT.md)
 - [ECE Flag Count Ablation Final Report](reports/cic_botnet_ece_controlled/FINAL_REPORT.md)
+- [CIC-IDS2017 to CIC-IDS2018: Botnet Detection Case Study](PROJECT_CASE_STUDY.md)
 
 These experiments demonstrate the importance of cross-dataset validation and threshold selection. They do not establish production readiness.
 
