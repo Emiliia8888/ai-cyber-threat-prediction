@@ -1,0 +1,4 @@
+caliper,total_matched_pairs_both_variants,median_fp_retention_pct_across_variants,smd_checks_below_010,smd_checks_total
+0.2,1063,23.266304763361106,24,30
+0.25,1695,35.756643971008124,26,30
+0.3,2389,52.48920125924299,23,30
